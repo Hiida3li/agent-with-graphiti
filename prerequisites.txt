@@ -3,6 +3,9 @@
 3. Python Environment: Python 3.10+ required
 4. Docker and Docker Compose for running Neo4j in a container
 
+=========
+1) What exactly should the agent remember? (preferences, intent history, product likes/dislikes, order history)
+
 
 Example Memory Nodes:
 
