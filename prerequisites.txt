@@ -14,8 +14,7 @@
 (persistent per user)
 ==========
 
-
-Example Memory Nodes:
+Memory Nodes:
 
 User {id, name, preferences}
 ProductQuery {query, timestamp}
