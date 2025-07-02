@@ -1,1 +1,3 @@
-LLM Service: works with LLM services that support Structured Output (Gemini)
+1. LLM Service: works with LLM services that support Structured Output (Gemini)
+2. Graph Database: Neo4j or FalkorDB for storing the knowledge graph
+
