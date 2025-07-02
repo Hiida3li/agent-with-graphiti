@@ -4,7 +4,8 @@
 4. Docker and Docker Compose for running Neo4j in a container
 
 =========
-1) What exactly should the agent remember? (preferences, intent history, product likes/dislikes, order history)
+1) What exactly should the agent remember?
+(preferences, intent history, product likes/dislikes, order history)
 
 2) What tool results should be saved? (Search results, action taken, timestamps?
 
