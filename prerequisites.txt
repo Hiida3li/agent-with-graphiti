@@ -11,6 +11,8 @@
  (Search results, action taken, timestamps)
 
 3) Should memory be session-based or persistent per user?
+(persistent per user)
+==========
 
 
 Example Memory Nodes:
