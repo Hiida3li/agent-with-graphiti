@@ -20,3 +20,18 @@ User {id, name, preferences}
 ProductQuery {query, timestamp}
 ToolCall {tool, params, result, time}
 Intent {type, confidence, source}
+
+
+
+6. Best Practices
+Clean Code Principles
+
+Use meaningful node labels and relationship types
+Keep queries readable and modular
+Use parameters, not hardcoded values, to avoid injection and improve reusability
+
+OOP and SOLID
+
+Encapsulate DB logic in service classes
+Inject database drivers via dependency injection
+Follow SRP: don't mix Cypher logic with business logic
