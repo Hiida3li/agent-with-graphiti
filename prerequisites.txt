@@ -6,6 +6,7 @@
 =========
 1) What exactly should the agent remember? (preferences, intent history, product likes/dislikes, order history)
 
+2) What tool results should be saved? (Search results, action taken, timestamps?
 
 Example Memory Nodes:
 
