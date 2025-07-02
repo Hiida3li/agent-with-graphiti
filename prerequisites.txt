@@ -1,4 +1,6 @@
 1. LLM Service: works with LLM services that support Structured Output (Gemini)
 2. Graph Database: Neo4j or FalkorDB for storing the knowledge graph
 3. Python Environment: Python 3.10+ required
+4. Docker and Docker Compose for running Neo4j in a container
+
 
