@@ -4,3 +4,9 @@
 4. Docker and Docker Compose for running Neo4j in a container
 
 
+Example Memory Nodes:
+
+User {id, name, preferences}
+ProductQuery {query, timestamp}
+ToolCall {tool, params, result, time}
+Intent {type, confidence, source}
