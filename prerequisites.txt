@@ -7,7 +7,8 @@
 1) What exactly should the agent remember?
 (preferences, intent history, product likes/dislikes, order history)
 
-2) What tool results should be saved? (Search results, action taken, timestamps?
+2) What tool results should be saved?
+ (Search results, action taken, timestamps)
 
 3) Should memory be session-based or persistent per user?
 
