@@ -8,7 +8,6 @@ from neo4j import AsyncGraphDatabase
 from graphiti_core import Graphiti
 from graphiti_core.nodes import EpisodeType
 
-# Load environment variables
 load_dotenv()
 
 # Set up Gemini
