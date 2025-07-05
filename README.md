@@ -7,3 +7,5 @@ graph = Graphiti(
     neo4j_password="password",
     llm_service="gemini"  
 )
+
+`pip install langfuse openai`
