@@ -3,7 +3,6 @@ import google.generativeai as genai
 from langfuse import observe
 from dotenv import load_dotenv
 
-# This correctly loads all keys from your .env file
 load_dotenv()
 
 # This correctly configures the Gemini client
