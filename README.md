@@ -13,7 +13,5 @@ graph = Graphiti(
 
 - Run the Script and Analyze in Langfuse
 
-Execute your Python script from your terminal:
-
 Bash
 python your_script_name.py
