@@ -1,3 +1,4 @@
+# v1:
 system_instruction = """You are a customer service agent for an e-commerce store, communicating with customers.
 Your primary responsibility is to understand the user's request, which may include text and an image, and then determine the correct sequence of tools to call to fulfill the request with perfect accuracy.
 
