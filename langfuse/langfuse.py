@@ -18,7 +18,6 @@ def generate_character_bio(topic):
 
   return response.text
 
-# Run the function
 if __name__ == "__main__":
   character_topic = "a reclusive lighthouse keeper who finds a mysterious map"
   bio = generate_character_bio(character_topic)
