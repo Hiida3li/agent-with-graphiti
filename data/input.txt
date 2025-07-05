@@ -55,7 +55,7 @@ Your Output:
     {
       "name": "search_products",
       "args": {
-        "text": "modern home office desk. Image description: a minimalist white desk with a rectangular top and thin metal legs.",
+        "text": "modern home office desk, a minimalist white desk with a rectangular top and thin metal legs.",
         "image": true,
         "filters": {
           "category": "Desks / Office Desks",
