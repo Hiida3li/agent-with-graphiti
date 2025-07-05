@@ -7,9 +7,6 @@ load_dotenv()
 
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 
-# The Langfuse keys are now loaded automatically.
-# We have REMOVED the lines that were overwriting them.
-
 @observe
 def generate_character_bio(topic):
   """Generates a character biography using Gemini."""
