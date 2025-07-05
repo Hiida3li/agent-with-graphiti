@@ -14,7 +14,6 @@ def generate_character_bio(topic):
   """Generates a character biography using Gemini."""
   model = genai.GenerativeModel('gemini-2.5-flash')
 
-  # The Langfuse decorator automatically captures this call
   response = model.generate_content(
       f"Create a short, compelling character biography for: {topic}"
   )
