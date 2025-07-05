@@ -1,0 +1,20 @@
+"""
+
+1)
+Scan the repo with gitleaks:
+
+
+gitleaks detect --source
+
+2) Scan Git history
+
+gitleaks detect --source . --log-opts="--all"
+
+
+3) Prevent secrets with a Git hook:
+
+# to block future commits that contain secrets:
+
+gitleaks protect --staged
+
+"""
