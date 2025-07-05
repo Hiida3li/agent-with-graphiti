@@ -8,9 +8,12 @@ graph = Graphiti(
     llm_service="gemini"  
 )
 
-- Setup Langfuse:
+- Setup Langfuse with openai:
 `pip install langfuse openai`
 
+- Setup Langfuse with Gemini:
+`pip install langfuse google-generativeai
+`
 - Run the Script and Analyze in Langfuse
 
 `python your_script_name.py`
