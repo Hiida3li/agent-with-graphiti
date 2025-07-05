@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# This correctly configures the Gemini client
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 
 # The Langfuse keys are now loaded automatically.
