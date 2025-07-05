@@ -15,5 +15,4 @@ graph = Graphiti(
 `pip install langfuse google-generativeai`
 
 - Run the Script and Analyze in Langfuse
-
 `python your_script_name.py`
