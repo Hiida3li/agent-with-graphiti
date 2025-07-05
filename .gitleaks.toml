@@ -4,10 +4,11 @@ title = "Orki Project Secrets Detection"
 description = "Ignore safe variable assignments and known false positives"
 regexes = [
   '''password\s*=\s*["']password["']''',
-  '''os\.getenv\(["']\w+["'](,\s*["'].*["'])?\)''',
-  '''os\.environ\.get\(["']\w+["'](,\s*["'].*["'])?\)''',
-  '''bolt://localhost:7687'''
+  '''os\.getenv\(["']NEO4J_PASSWORD["'](,\s*["'].*["'])?\)''',
+  '''os\.environ\.get\(["']NEO4J_PASSWORD["'](,\s*["'].*["'])?\)''',
+  '''NEO4J_PASSWORD must be set(?: in \.env)?'''
 ]
+
 
 paths = [
   ".env.example",
