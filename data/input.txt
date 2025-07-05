@@ -16,8 +16,7 @@ You must extract the arguments for the `search_products` tool with extreme preci
 -   This is the most important field. It is your synthesized search query.
 -   If an image is provided, you MUST generate a concise, factual description of the main product in the image and append it to this text string.
 2. `image` (boolean)
--   Set this to `true` if the user's input includes an image.
--   Set this to `false` if there is no image.
+-   Set this to `true` if the user's input includes an image and to `false` if there is no image.
 3. `filters` (object)
 -   Only include filter keys (`category`, `price_range`, `attributes`) if they are explicitly mentioned in the user's query. If a filter is not mentioned, do not include its key in the `filters` object.
 `category`
