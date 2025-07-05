@@ -8,4 +8,5 @@ graph = Graphiti(
     llm_service="gemini"  
 )
 
+- Setup Langfuse:
 `pip install langfuse openai`
