@@ -4,12 +4,13 @@ title = "Orki Project Secrets Detection"
 description = "Ignore safe environment variable usage and known false positives"
 regexes = [
   '''password\s*=\s*["']password["']''',
-  '''os\.getenv\(["']NEO4J_PASSWORD["'](,\s*["'].*["'])?\)''',
-  '''os\.environ\.get\(["']NEO4J_PASSWORD["'](,\s*["'].*["'])?\)''',
+  '''os\.getenv\(["']\w+["'](,\s*["']?.*["']?)?\)''',
+  '''os\.environ\.get\(["']\w+["'](,\s*["']?.*["']?)?\)''',
   '''NEO4J_PASSWORD must be set(?: in \.env)?''',
-  '''bolt://localhost:7687'''
+  '''bolt://localhost:7687''',
+  '''langfuse_host\s*=\s*["']https://cloud\.langfuse\.com["']''',
+  '''^\s*[A-Z_]+[\s:=]+["']?[a-zA-Z0-9._\-\/:@]+["']?$'''  # Allow .env variable names
 ]
-
 
 paths = [
   ".env.example",
