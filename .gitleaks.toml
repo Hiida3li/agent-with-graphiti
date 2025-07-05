@@ -1,5 +1,13 @@
 title = "Orki Project Secrets Detection"
 
+[allowlist]
+description = "Ignore safe variable assignments and known false positives"
+regexes = [
+  '''password\s*=\s*password''',  
+  '''os.getenv\(["']\w+["']\)''',  
+]
+
+
 [[rules]]
 id = "openai-api-key"
 description = "OpenAI API Key"
