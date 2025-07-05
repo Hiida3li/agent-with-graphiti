@@ -5,9 +5,14 @@ description = "Ignore safe variable assignments and known false positives"
 regexes = [
   '''password\s*=\s*["']password["']''',
   '''os\.getenv\(["']\w+["'](,\s*["'].*["'])?\)''',
-  '''os\.environ\.get\(["']\w+["'](,\s*["'].*["'])?\)'''
+  '''os\.environ\.get\(["']\w+["'](,\s*["'].*["'])?\)''',
+  '''bolt://localhost:7687'''
 ]
 
+paths = [
+  ".env.example",
+  "README.md"
+]
 
 [[rules]]
 id = "openai-api-key"
