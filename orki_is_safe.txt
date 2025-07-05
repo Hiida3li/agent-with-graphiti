@@ -17,4 +17,5 @@ gitleaks detect --source . --log-opts="--all"
 
 gitleaks protect --staged
 
+
 """
