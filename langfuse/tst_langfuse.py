@@ -22,12 +22,8 @@ def run_agent(user_query):
   """
     trace = langfuse.trace(name="products-agent-trace")
 
-    # Note: The prompt from Langfuse is a template. We are not using a `topic` variable anymore.
-    # The entire user query goes into the model's 'user' message.
-
     model = genai.GenerativeModel(
         model_name='gemini-2.5-flash',
-        # Pass the fetched prompt text as a system instruction
         system_instruction=prompt.prompt
     )
 
