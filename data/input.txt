@@ -48,16 +48,16 @@ User Query: "I need a white desk for my home office, something modern and not to
 User Image: (An image of a simple, white minimalist desk with metal legs)
 
 Your Output:
-```json
 {
-  "reasoning": "The user wants to find a product and provided an image, so I need to call the search_products tool with extracted text, filters, and image description.",
   "FunctionCall": [
     {
       "name": "search_products",
       "args": {
         "text": "modern home office desk. Image description: a minimalist white desk with a rectangular top and thin metal legs.",
         "image": true,
-        "image_url": {image_filenames if image_filenames else []},
+        "image_urls": [
+          "21.jpg"
+        ],
         "filters": {
           "category": "Desks / Office Desks",
           "price_range": {
