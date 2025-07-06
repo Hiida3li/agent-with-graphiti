@@ -27,37 +27,29 @@ def run_agent(user_query):
         system_instruction=prompt.prompt
     )
 
-    # Get the generation from the trace, which automatically tracks it
     generation = trace.generation(
         name="agent-decision-generation",
-        model=prompt.config["model"],  # Use the model from the prompt's config
-        model_parameters=prompt.config,  # Pass the whole config
-        input=user_query,  # The user's query is the input
-        prompt=prompt,  # Link the prompt object for version tracking
+        model=prompt.config["model"],
+        model_parameters=prompt.config,
+        prompt=prompt,
     )
 
-    # Call the Gemini API
     response = model.generate_content(user_query)
 
-    # Update the generation with the output
     generation.end(output=response.text)
 
     return response.text
 
 
-# --- Main execution block ---
 if __name__ == "__main__":
-    # 3. Define a test query
     test_query = "I need a white desk for my home office, maybe around 100 OMR."
 
-    # 4. Run the agent and get the output
     print(f"Testing with query: '{test_query}'\n")
     agent_output_str = run_agent(test_query)
 
     print("--- Agent Output ---")
     print(agent_output_str)
 
-    # You can try to parse the JSON to see if it's valid
     try:
         parsed_output = json.loads(agent_output_str)
         print("\n--- JSON is Valid ---")
