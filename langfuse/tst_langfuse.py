@@ -1,6 +1,6 @@
 import os
 import google.generativeai as genai
-from langfuse import Langfuse, observe  # Make sure observe is imported
+from langfuse import Langfuse, observe
 from dotenv import load_dotenv
 import json
 
