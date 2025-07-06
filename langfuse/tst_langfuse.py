@@ -1,24 +1,69 @@
 import os
 import google.generativeai as genai
-from langfuse import observe
+from langfuse import Langfuse
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 
-@observe
-def generate_character_bio(topic):
-  """Generates a character biography using Gemini."""
-  model = genai.GenerativeModel('gemini-2.5-flash')
+langfuse = Langfuse()
 
-  response = model.generate_content(
-      f"Create a short, compelling character biography for: {topic}"
-  )
 
-  return response.text
+prompt = langfuse.get_prompt("gemini-products-agent", label="latest")
 
+
+
+def run_agent(user_query):
+    """
+  Runs the agent by fetching the Langfuse prompt, formatting it,
+  and sending it to the Gemini model.
+  """
+    trace = langfuse.trace(name="products-agent-trace")
+
+    # Note: The prompt from Langfuse is a template. We are not using a `topic` variable anymore.
+    # The entire user query goes into the model's 'user' message.
+
+    model = genai.GenerativeModel(
+        model_name='gemini-2.5-flash',
+        # Pass the fetched prompt text as a system instruction
+        system_instruction=prompt.prompt
+    )
+
+    # Get the generation from the trace, which automatically tracks it
+    generation = trace.generation(
+        name="agent-decision-generation",
+        model=prompt.config["model"],  # Use the model from the prompt's config
+        model_parameters=prompt.config,  # Pass the whole config
+        input=user_query,  # The user's query is the input
+        prompt=prompt,  # Link the prompt object for version tracking
+    )
+
+    # Call the Gemini API
+    response = model.generate_content(user_query)
+
+    # Update the generation with the output
+    generation.end(output=response.text)
+
+    return response.text
+
+
+# --- Main execution block ---
 if __name__ == "__main__":
-  character_topic = "a reclusive lighthouse keeper who finds a mysterious map"
-  bio = generate_character_bio(character_topic)
-  print(bio)
+    # 3. Define a test query
+    test_query = "I need a white desk for my home office, maybe around 100 OMR."
+
+    # 4. Run the agent and get the output
+    print(f"Testing with query: '{test_query}'\n")
+    agent_output_str = run_agent(test_query)
+
+    print("--- Agent Output ---")
+    print(agent_output_str)
+
+    # You can try to parse the JSON to see if it's valid
+    try:
+        parsed_output = json.loads(agent_output_str)
+        print("\n--- JSON is Valid ---")
+    except json.JSONDecodeError as e:
+        print(f"\n--- Error: Output is not valid JSON! --- \n{e}")
