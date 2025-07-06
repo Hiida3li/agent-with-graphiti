@@ -11,7 +11,7 @@ genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 langfuse = Langfuse()
 
 prompt_name = "gemini-products-agent"
-prompt = langfuse.get_prompt(prompt_name)
+prompt = langfuse.get_prompt(prompt_name, label="latest")
 
 
 @observe(name="products-agent-trace")
