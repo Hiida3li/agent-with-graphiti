@@ -1,6 +1,6 @@
 import os
 import google.generativeai as genai
-from langfuse import Langfuse
+from langfuse import Langfuse, observe  # Make sure observe is imported
 from dotenv import load_dotenv
 import json
 
@@ -10,33 +10,21 @@ genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 
 langfuse = Langfuse()
 
+prompt_name = "gemini-products-agent"
+prompt = langfuse.get_prompt(prompt_name)
 
-prompt = langfuse.get_prompt("gemini-products-agent", label="latest")
 
-
-
+@observe(name="products-agent-trace")
 def run_agent(user_query):
     """
-  Runs the agent by fetching the Langfuse prompt, formatting it,
-  and sending it to the Gemini model.
-  """
-    trace = langfuse.trace(name="products-agent-trace")
-
+    Runs the agent by sending the user query and system prompt to the Gemini model.
+    """
     model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
+        model_name=prompt.config.get("model", "gemini-2.5-flash"),
         system_instruction=prompt.prompt
     )
 
-    generation = trace.generation(
-        name="agent-decision-generation",
-        model=prompt.config["model"],
-        model_parameters=prompt.config,
-        prompt=prompt,
-    )
-
     response = model.generate_content(user_query)
-
-    generation.end(output=response.text)
 
     return response.text
 
@@ -54,4 +42,4 @@ if __name__ == "__main__":
         parsed_output = json.loads(agent_output_str)
         print("\n--- JSON is Valid ---")
     except json.JSONDecodeError as e:
-        print(f"\n--- Error: Output is not valid JSON! --- \n{e}")
+        print(f"\n--- Error: Output is not valid JSON! ---\n{e}")
