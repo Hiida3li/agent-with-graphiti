@@ -175,3 +175,6 @@ cython_debug/
 .env
 credentials.json
 
+.venv/
+__pycache__/
+.ipynb_checkpoints/
