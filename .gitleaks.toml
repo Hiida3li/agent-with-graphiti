@@ -5,7 +5,7 @@ description = "Ignore safe environment variable usage and known false positives"
 regexes = [
   '''password\s*=\s*["']password["']''',
   '''(?i)os\.(getenv|environ\.get)\(\s*["'](NEO4J_PASSWORD|NEO4J_URI|NEO4J_USER|langfuse_host)["']\s*(,\s*["']?.*["']?)?\)''',
-  '''(?i)NEO4J_PASSWORD\s+must\s+be\s+set.*''',
+  '''(?i)NEO4J_PASSWORD\s+(must\s+be\s+set|not\s+set).*''',
   '''bolt://localhost:7687''',
   '''langfuse_host\s*=\s*["']https://cloud\.langfuse\.com["']''',
   '''^[A-Z_]+[\s:=]+["']?[a-zA-Z0-9._\-\/:@]+["']?$'''
@@ -16,6 +16,10 @@ paths = [
   "README.md"
 ]
 
+[[allowlist.files]]
+description = "Ignore safe usage of NEO4J_PASSWORD in tst notebook"
+path = "notebooks/tst.ipynb"
+rules = ["neo4j-password"]
 
 [[rules]]
 id = "openai-api-key"
