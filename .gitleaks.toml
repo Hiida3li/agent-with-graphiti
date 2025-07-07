@@ -63,11 +63,11 @@ description = "AgentOps API Key"
 regex = '''[0-9a-f]{4,8}-[0-9a-f]{4,8}-[0-9a-f]{8}'''
 tags = ["apikey", "agentops"]
 
-#[[rules]]
-#id = "neo4j-uri"
-#description = "Neo4j URI"
-#regex = '''bolt://[^\s'"]+'''
-#tags = ["uri", "neo4j"]
+[[rules]]
+id = "neo4j-uri"
+description = "Neo4j URI"
+regex = '''bolt://[^\s'"]+'''
+tags = ["uri", "neo4j"]
 
 [[rules]]
 id = "neo4j-password"
