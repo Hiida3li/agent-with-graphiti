@@ -1,100 +1,100 @@
-#title = "Orki Project Secrets Detection"
-#
-#[allowlist]
-#description = "Ignore safe environment variable usage and known false positives"
-#regexes = [
-#  '''password\s*=\s*["']password["']''',
-#  '''(?i)os\.(getenv|environ\.get)\(\s*["'](NEO4J_PASSWORD|NEO4J_URI|NEO4J_USER|langfuse_host)["']\s*(,\s*["']?.*["']?)?\)''',
-#  '''(?i)NEO4J_PASSWORD\s+(must\s+be\s+set|not\s+set).*''',
-#  '''bolt://localhost:7687''',
-#  '''langfuse_host\s*=\s*["']https://cloud\.langfuse\.com["']''',
-#  '''^[A-Z_]+[\s:=]+["']?[a-zA-Z0-9._\-\/:@]+["']?$'''
-#]
-#
-#paths = [
-#  ".env.example",
-#  "README.md"
-#]
-#
-#[[allowlist.files]]
-#description = "Ignore safe usage of NEO4J_PASSWORD in tst notebook"
-#path = "notebooks/tst.ipynb"
-#rules = ["neo4j-password"]
-#
-#[[rules]]
-#id = "openai-api-key"
-#description = "OpenAI API Key"
-#regex = '''sk-[a-zA-Z0-9]{20,40}'''
-#tags = ["apikey", "openai"]
-#
-#[[rules]]
-#id = "google-api-key"
-#description = "Google API Key"
-#regex = '''AIza[0-9A-Za-z\-_]{15,40}'''
-#tags = ["apikey", "google"]
-#
-#[[rules]]
-#id = "anthropic-api-key"
-#description = "Anthropic API Key"
-#regex = '''sk-ant-[a-zA-Z0-9\-_]{30,}'''
-#tags = ["apikey", "anthropic"]
-#
-#[[rules]]
-#id = "milvus-token"
-#description = "Milvus Token"
-#regex = '''ea[0-9a-f]{30,}'''
-#tags = ["apikey", "milvus"]
-#
-#[[rules]]
-#id = "milvus-uri"
-#description = "Milvus URI"
-#regex = '''https://[a-z0-9\-\.]+\.zilliz\.com'''
-#tags = ["uri", "milvus"]
-#
-#[[rules]]
-#id = "groq-api-key"
-#description = "Groq API Key"
-#regex = '''gsk_[a-zA-Z0-9]{20,}'''
-#tags = ["apikey", "groq"]
-#
-#[[rules]]
-#id = "agentops-key"
-#description = "AgentOps API Key"
-#regex = '''[0-9a-f]{4,8}-[0-9a-f]{4,8}-[0-9a-f]{8}'''
-#tags = ["apikey", "agentops"]
-#
-#[[rules]]
-#id = "neo4j-uri"
-#description = "Neo4j URI"
-#regex = '''bolt://[^\s'"]+'''
-#tags = ["uri", "neo4j"]
-#
-#[[rules]]
-#id = "neo4j-password"
-#description = "Neo4j Password"
-#regex = '''(?i)(neo4j_password|neo4j_pass|NEO4J_PASSWORD)\s*=\s*["'][^"\n]{6,}["']$'''
-#tags = ["password", "neo4j"]
-#
-#[[rules]]
-#id = "langfuse-secret"
-#description = "Langfuse Secret Key"
-#regex = '''sk-lf-[a-z0-9\-]{16,}'''
-#tags = ["apikey", "langfuse"]
-#
-#[[rules]]
-#id = "langfuse-public-key"
-#description = "Langfuse Public Key"
-#regex = '''pk-lf-[a-z0-9\-]{16,}'''
-#tags = ["apikey", "langfuse"]
-#
-#[[rules]]
-#id = "generic-password"
-#description = "Generic password assignment"
-#regex = '''(?i)(password|passwd|pwd)[\s:=]+["']?[a-zA-Z0-9!@#$%^&*()_+=\-]{6,}["']?'''
-#tags = ["password"]
-#
-#[[rules]]
-#id = "generic-secret"
-#description = "Generic 'secret' detection"
-#regex = '''(?i)(secret|token)[\s:=]+["']?[a-zA-Z0-9]{10,}["']?'''
-#tags = ["secret"]
+title = "Orki Project Secrets Detection"
+
+[allowlist]
+description = "Ignore safe environment variable usage and known false positives"
+regexes = [
+  '''password\s*=\s*["']password["']''',
+  '''(?i)os\.(getenv|environ\.get)\(\s*["'](NEO4J_PASSWORD|NEO4J_URI|NEO4J_USER|langfuse_host)["']\s*(,\s*["']?.*["']?)?\)''',
+  '''(?i)NEO4J_PASSWORD\s+(must\s+be\s+set|not\s+set).*''',
+  '''bolt://localhost:7687''',
+  '''langfuse_host\s*=\s*["']https://cloud\.langfuse\.com["']''',
+  '''^[A-Z_]+[\s:=]+["']?[a-zA-Z0-9._\-\/:@]+["']?$'''
+]
+
+paths = [
+  ".env.example",
+  "README.md"
+]
+
+[[allowlist.files]]
+description = "Ignore safe usage of NEO4J_PASSWORD in tst notebook"
+path = "notebooks/tst.ipynb"
+rules = ["neo4j-password"]
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9]{20,40}'''
+tags = ["apikey", "openai"]
+
+[[rules]]
+id = "google-api-key"
+description = "Google API Key"
+regex = '''AIza[0-9A-Za-z\-_]{15,40}'''
+tags = ["apikey", "google"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''sk-ant-[a-zA-Z0-9\-_]{30,}'''
+tags = ["apikey", "anthropic"]
+
+[[rules]]
+id = "milvus-token"
+description = "Milvus Token"
+regex = '''ea[0-9a-f]{30,}'''
+tags = ["apikey", "milvus"]
+
+[[rules]]
+id = "milvus-uri"
+description = "Milvus URI"
+regex = '''https://[a-z0-9\-\.]+\.zilliz\.com'''
+tags = ["uri", "milvus"]
+
+[[rules]]
+id = "groq-api-key"
+description = "Groq API Key"
+regex = '''gsk_[a-zA-Z0-9]{20,}'''
+tags = ["apikey", "groq"]
+
+[[rules]]
+id = "agentops-key"
+description = "AgentOps API Key"
+regex = '''[0-9a-f]{4,8}-[0-9a-f]{4,8}-[0-9a-f]{8}'''
+tags = ["apikey", "agentops"]
+
+[[rules]]
+id = "neo4j-uri"
+description = "Neo4j URI"
+regex = '''bolt://[^\s'"]+'''
+tags = ["uri", "neo4j"]
+
+[[rules]]
+id = "neo4j-password"
+description = "Neo4j Password"
+regex = '''(?i)(neo4j_password|neo4j_pass|NEO4J_PASSWORD)\s*=\s*["'][^"\n]{6,}["']$'''
+tags = ["password", "neo4j"]
+
+[[rules]]
+id = "langfuse-secret"
+description = "Langfuse Secret Key"
+regex = '''sk-lf-[a-z0-9\-]{16,}'''
+tags = ["apikey", "langfuse"]
+
+[[rules]]
+id = "langfuse-public-key"
+description = "Langfuse Public Key"
+regex = '''pk-lf-[a-z0-9\-]{16,}'''
+tags = ["apikey", "langfuse"]
+
+[[rules]]
+id = "generic-password"
+description = "Generic password assignment"
+regex = '''(?i)(password|passwd|pwd)[\s:=]+["']?[a-zA-Z0-9!@#$%^&*()_+=\-]{6,}["']?'''
+tags = ["password"]
+
+[[rules]]
+id = "generic-secret"
+description = "Generic 'secret' detection"
+regex = '''(?i)(secret|token)[\s:=]+["']?[a-zA-Z0-9]{10,}["']?'''
+tags = ["secret"]
