@@ -57,11 +57,11 @@ description = "Groq API Key"
 regex = '''gsk_[a-zA-Z0-9]{20,}'''
 tags = ["apikey", "groq"]
 
-[[rules]]
-id = "agentops-key"
-description = "AgentOps API Key"
-regex = '''[0-9a-f]{4,8}-[0-9a-f]{4,8}-[0-9a-f]{8}'''
-tags = ["apikey", "agentops"]
+#[[rules]]
+#id = "agentops-key"
+#description = "AgentOps API Key"
+#regex = '''[0-9a-f]{4,8}-[0-9a-f]{4,8}-[0-9a-f]{8}'''
+#tags = ["apikey", "agentops"]
 
 [[rules]]
 id = "neo4j-uri"
