@@ -1,7 +1,6 @@
 import os
 import json
 import logging
-import json_repair
 import google.generativeai as genai
 from typing import List, Dict, Optional, Any
 from pydantic import BaseModel, Field
