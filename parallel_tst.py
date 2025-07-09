@@ -25,7 +25,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# ================== MODELS ==================
 
 class ToolName(Enum):
     SEARCH_PRODUCTS = "search_products"
@@ -87,15 +86,15 @@ class ImageProcessor:
     def process_image_url(self, image_url: str) -> Dict[str, Any]:
         """Process image from URL and return structured description"""
         try:
-            # Download image
+
             response = requests.get(image_url)
             response.raise_for_status()
             img = Image.open(io.BytesIO(response.content))
 
-            # Get filename
+
             image_filename = os.path.basename(urlparse(image_url).path)
 
-            # Generate description
+
             prompt = f"""
 You are an expert Customer Service Agent. Your task is to generate a concise, accurate, and dense description of a product from an image. This description will be used to create embeddings for a semantic search database, so it must contain key factual attributes.
 
@@ -128,7 +127,7 @@ The filename for the uploaded image is: {image_filename}
             }
 
 
-# ================== COMPOSITIONAL AGENT ==================
+
 
 class CompositionalAgent:
     def __init__(self, api_key: str):
@@ -162,7 +161,7 @@ class CompositionalAgent:
                     logger.error(f"Failed to process image {url}: {e}")
                     image_filenames.append(os.path.basename(urlparse(url).path))
 
-        # Create the analysis prompt
+
         prompt = f"""You are an expert Customer Service Agent. Analyze the user's query and any provided images to understand their intent and plan the appropriate response.
 
 1. REASONING: Understand what the user wants and determine what tools are needed
@@ -204,15 +203,14 @@ OUTPUT JSON SCHEMA:
 }}
 
 REASONING GUIDELINES:
-- If user asks about policies, shipping, returns → use search_faqs
-- If user wants to find products, recommendations → use search_products  
-- If user needs both product info AND policy info → use both tools
+- If user asks about policies, shipping, returns (use search_faqs)
+- If user wants to find products, recommendations (use search_products)  
+- If user needs both product info AND policy info use both tools 
 - Explain your reasoning clearly
 
 TEXT OPTIMIZATION RULES:
 - Combine user query keywords with image descriptions
-- Focus on searchable product attributes: colors, materials, styles, functions
-- Remove conversational words, keep only search-relevant terms
+- Remove conversational words, keep only searchable product attributes: colors, materials, styles, functions
 - For images: describe style, color, material, shape, function, category
 
 FILTER EXTRACTION RULES:
@@ -265,13 +263,12 @@ Image Filenames: {image_filenames}
     def execute_composition(self, user_query: str, image_urls: List[str] = None) -> Dict[str, Any]:
         """Execute compositional reasoning workflow"""
 
-        # Step 1: Analyze and plan
         logger.info("Step 1: Analyzing query and planning function calls")
         composition = self.analyze_query(user_query, image_urls)
         logger.info(f"Reasoning: {composition.reasoning}")
         logger.info(f"Planned {len(composition.FunctionCall)} function calls")
 
-        # Step 2: Execute planned function calls in parallel
+
         results = {}
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -287,7 +284,7 @@ Image Filenames: {image_filenames}
                     logger.error(f"Unknown tool: {func_call.name}")
                     results[f"{func_call.name}_{i}"] = f"Error: Unknown tool {func_call.name}"
 
-            # Collect results as they complete
+
             for future in concurrent.futures.as_completed(future_to_call):
                 func_name, index = future_to_call[future]
                 try:
@@ -336,7 +333,6 @@ Response:
             logger.error(f"Error generating final response: {e}")
             return "I found some information for you, but had trouble formatting the response. Please try again."
 
-    # ================== TOOL IMPLEMENTATIONS ==================
 
     def _search_products(self, text: str, image: bool = False, image_url: List[str] = None,
                          filters: Dict = None) -> str:
@@ -384,7 +380,7 @@ Response:
         logger.info(f"Searching FAQs: '{text}'")
 
         # Simulate actual search time
-        time.sleep(1.5)  # 1.5 second delay to simulate real work
+        time.sleep(1.5)
 
         # Mock implementation - replace with your actual FAQ search
         if "shipping" in text.lower():
