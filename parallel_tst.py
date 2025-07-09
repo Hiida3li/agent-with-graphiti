@@ -247,18 +247,20 @@ Image Filenames: {image_filenames}
             response_data = json.loads(response.text)
             return CompositionResponse(**response_data)
 
+
         except Exception as e:
+
             logger.error(f"Error in query analysis: {e}")
-            # Fallback response
+
             return CompositionResponse(
-                reasoning="Error in analysis, defaulting to product search",
-                FunctionCall=[
-                    FunctionCall(
-                        name="search_products",
-                        args={"text": user_query, "image": bool(image_urls), "image_url": image_filenames}
-                    )
-                ]
+
+                reasoning="I had trouble understanding your request. Please try rephrasing your question or being more specific about what you're looking for.",
+
+                FunctionCall=[]
+
             )
+
+
 
     def execute_composition(self, user_query: str, image_urls: List[str] = None) -> Dict[str, Any]:
         """Execute compositional reasoning workflow"""
