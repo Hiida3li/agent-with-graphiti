@@ -1,6 +1,7 @@
 import os
 import datetime
 import nest_asyncio
+import asyncio
 from dotenv import load_dotenv
 from graphiti_core import Graphiti
 from graphiti_core.llm_client.gemini_client import GeminiClient, LLMConfig
