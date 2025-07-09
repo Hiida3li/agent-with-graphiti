@@ -255,7 +255,6 @@ Image Filenames: {image_filenames}
             return CompositionResponse(
 
                 reasoning="I had trouble understanding your request. Please try rephrasing your question or being more specific about what you're looking for.",
-
                 FunctionCall=[]
 
             )
