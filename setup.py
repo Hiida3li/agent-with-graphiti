@@ -147,7 +147,6 @@ class CompositionalAgent:
     def analyze_query(self, user_query: str, image_urls: List[str] = None) -> CompositionResponse:
         """Analyze user query and plan function calls with compositional reasoning"""
 
-        # Process images if provided
         image_descriptions = []
         image_filenames = []
 
@@ -161,7 +160,6 @@ class CompositionalAgent:
                     logger.error(f"Failed to process image {url}: {e}")
                     image_filenames.append(os.path.basename(urlparse(url).path))
 
-        # Create the analysis prompt
         prompt = f"""You are an expert Customer Service Agent. Analyze the user's query and any provided images to understand their intent and plan the appropriate response.
 
 1. REASONING: Understand what the user wants and determine what tools are needed
@@ -244,13 +242,11 @@ Image Filenames: {image_filenames}
 
             response = self.model.generate_content(prompt, generation_config=generation_config)
 
-            # Parse response
             response_data = json.loads(response.text)
             return CompositionResponse(**response_data)
 
         except Exception as e:
             logger.error(f"Error in query analysis: {e}")
-            # Fallback response
             return CompositionResponse(
                 reasoning="Error in analysis, defaulting to product search",
                 FunctionCall=[
@@ -270,7 +266,6 @@ Image Filenames: {image_filenames}
         logger.info(f"Reasoning: {composition.reasoning}")
         logger.info(f"Planned {len(composition.FunctionCall)} function calls")
 
-        # Step 2: Execute planned function calls in parallel
         results = {}
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
