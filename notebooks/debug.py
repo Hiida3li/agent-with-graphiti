@@ -85,6 +85,7 @@ async def simple_graphiti_gemini_example():
         for i, result in enumerate(results, 1):
             print(f"   {i}. {result}")
 
+if __name__ == "__main__":
+    asyncio.run(simple_graphiti_gemini_example())
 
-
-await simple_graphiti_gemini_example()
+# await simple_graphiti_gemini_example()
