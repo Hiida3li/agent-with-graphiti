@@ -11,6 +11,8 @@ import io
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 import concurrent.futures
+import time
+import threading
 
 load_dotenv()
 
@@ -156,9 +158,9 @@ class CompositionalAgent:
                     logger.error(f"Failed to process image {url}: {e}")
                     image_filenames.append(os.path.basename(urlparse(url).path))
 
-        prompt = f"""You are an expert Customer Service Agent. Analyze the user's query and any provided images to understand their intent and plan the appropriate response.
+        prompt = f"""You are an expert Customer Service Agent. Analyze the user's query and any provided images, and plan the appropriate response.
 
-1. REASONING: Understand what the user wants and determine what tools are needed
+1. REASONING: Understand what the user wants and determine what tools are needed if no tools needed answer directly
 2. TOOL SELECTION: Decide which functions to call (search_products, search_faqs, or both)
 3. PARAMETER EXTRACTION: Extract search parameters and filters from the query
 4. IMAGE ANALYSIS: Generate descriptions of any images provided
@@ -197,9 +199,9 @@ OUTPUT JSON SCHEMA:
 }}
 
 REASONING GUIDELINES:
-- If user asks about policies, shipping, returns (use search_faqs)
-- If user wants to find products, recommendations (use search_products)  
-- If user needs both product info AND policy info use both tools 
+- If user asks about policies, shipping, returns or any business logic (use search_faqs)
+- If user wants to find products, recommendations or any related to products (use search_products)  
+- If user needs both product info AND business info use both tools 
 - Explain your reasoning clearly
 
 TEXT OPTIMIZATION RULES:
@@ -324,12 +326,9 @@ Response:
             logger.error(f"Error generating final response: {e}")
             return "I found some information for you, but had trouble formatting the response. Please try again."
 
-    def _search_products(self, text: str, image: bool = False, image_url: List[str] = None,
+    def _search_products(self, text: str, image: bool, image_url: List[str] = None,
                          filters: Dict = None) -> str:
         """Search for products in the database"""
-        import time
-        import threading
-
         thread_id = threading.get_ident()
         start_time = time.time()
         logger.info(f"[Thread {thread_id}] STARTED search_products at {start_time:.3f}")
@@ -359,8 +358,7 @@ Response:
 
     def _search_faqs(self, text: str) -> str:
         """Search FAQ database"""
-        import time
-        import threading
+
 
         thread_id = threading.get_ident()
         start_time = time.time()
@@ -418,7 +416,8 @@ def main():
         if not user_query:
             continue
 
-        image_input = input("Enter image URLs only (https://..., or press Enter to skip): ").strip()
+
+        image_input = input("Enter image URLs (comma-separated, or press Enter to skip): ").strip()
         image_urls = [url.strip() for url in image_input.split(',') if url.strip()] if image_input else None
 
         try:
