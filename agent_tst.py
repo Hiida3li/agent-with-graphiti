@@ -418,8 +418,7 @@ def main():
         if not user_query:
             continue
 
-
-        image_input = input("Enter image URLs (comma-separated, or press Enter to skip): ").strip()
+        image_input = input("Enter image URLs only (https://..., or press Enter to skip): ").strip()
         image_urls = [url.strip() for url in image_input.split(',') if url.strip()] if image_input else None
 
         try:
