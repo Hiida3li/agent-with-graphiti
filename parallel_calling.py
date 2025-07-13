@@ -161,13 +161,11 @@ User Query: {query}
             if not function_calls:
                 return {"reasoning": plan.get("reasoning"), "results": "No tools were called."}
 
-            # Create a list of tasks to run concurrently
             tasks = [
                 self.executor.execute(call["name"], call["args"])
                 for call in function_calls
             ]
 
-            # Execute all tasks in parallel
             results = await asyncio.gather(*[t for t in tasks if t])
 
             return {"reasoning": plan.get("reasoning"), "results": results}
