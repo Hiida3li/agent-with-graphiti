@@ -129,7 +129,6 @@ def test_chat():
 
             print("\n LLM Response:")
             print(response)
-            return response.text
 
 
 
