@@ -191,12 +191,10 @@ Instructions:
 
 User Query: {query}"""
 
-    # Method 1: Parallel Tool Execution After Planning
     async def process_query_with_parallel_tools(self, query: str, image_url: str = None) -> Dict:
         """Plan with Gemini, then execute planned tools in parallel"""
         logger.info(f"Processing query: {query}")
 
-        # Step 1: Get tool plan from Gemini
         prompt = self.create_prompt(query, image_url)
         plan_response = await self.llm.generate_async(prompt, image_url)
 
@@ -207,7 +205,6 @@ User Query: {query}"""
             if not function_calls:
                 return {"reasoning": plan.get("reasoning"), "results": []}
 
-            # Step 2: Execute all planned tools in parallel
             tasks = []
             for call in function_calls:
                 tool_name = call["name"]
@@ -237,7 +234,6 @@ User Query: {query}"""
             logger.error(f"Failed to parse plan: {e}")
             return {"error": "Failed to parse tool plan"}
 
-    # Method 2: Parallel Query Processing
     async def process_multiple_queries_parallel(self, queries: List[Dict]) -> List[Dict]:
         """Process multiple user queries in parallel"""
         tasks = []
@@ -251,7 +247,6 @@ User Query: {query}"""
         results = await asyncio.gather(*tasks, return_exceptions=True)
         return results
 
-    # Method 3: Parallel LLM Calls for Different Analysis Types
     async def comprehensive_analysis_parallel(self, query: str, image_url: str = None) -> Dict:
         """Run multiple types of analysis in parallel"""
 
@@ -262,7 +257,6 @@ User Query: {query}"""
             "intent_classification": f"Classify the intent of this query into categories: {query}"
         }
 
-        # Execute all analyses in parallel
         tasks = []
         for analysis_type, prompt in prompts.items():
             task = self.llm.generate_async(prompt, image_url if analysis_type == "tool_planning" else None)
@@ -277,7 +271,6 @@ User Query: {query}"""
 
         return results
 
-    # Method 4: Parallel Image Processing (Multiple Images)
     async def process_multiple_images_parallel(self, query: str, image_urls: List[str]) -> Dict:
         """Process multiple images in parallel"""
         if not image_urls:
@@ -305,7 +298,6 @@ User Query: {query}"""
 
         return combined_results
 
-    # Method 5: Thread Pool for CPU-Intensive Tasks
     def process_with_thread_pool(self, queries: List[Dict], max_workers: int = 5) -> List[Dict]:
         """Use thread pool for CPU-intensive processing"""
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -416,10 +408,8 @@ async def test_parallel_system():
 
 
 if __name__ == "__main__":
-    # Run async tests
     asyncio.run(test_parallel_system())
 
-    # Test thread pool approach
     system = ParallelToolSystem()
     queries = [
         {"query": "What sizes do you have?"},
