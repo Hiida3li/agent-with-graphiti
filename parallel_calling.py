@@ -7,7 +7,7 @@ import json
 from typing import List, Dict, Any
 
 import aiohttp
-import google.genai as genai
+import google.generativeai as genai
 from PIL import Image
 from dotenv import load_dotenv
 import requests
