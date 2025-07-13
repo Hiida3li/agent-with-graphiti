@@ -9,7 +9,7 @@ from PIL import Image
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from dotenv import load_dotenv
-import google.genai as genai  # New async-supported library
+import google.genai as genai
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 from typing import List, Dict, Any, Optional
@@ -37,9 +37,7 @@ class GeminiProvider(LLMProvider):
     def __init__(self, model_name: str = "gemini-2.5-flash"):
         self.api_key = os.getenv("GOOGLE_API_KEY")
         self.model_name = model_name
-        # Create sync client for backwards compatibility
         self.client = genai.Client(api_key=self.api_key)
-        # Create async client for parallel operations
         self.async_client = genai.AsyncClient(api_key=self.api_key)
 
     def generate(self, prompt: str, image_url: str = None) -> str:
