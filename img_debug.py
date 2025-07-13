@@ -65,25 +65,46 @@ class GeminiProvider(LLMProvider):
 def create_prompt(query: str, image_url: str = None) -> str:
     image_filename = os.path.basename(urlparse(image_url).path) if image_url else None
 
-    return f"""You are a Customer Service Agent. Analyze the user's query and any provided images to understand their intent then plan the appropriate response.
-1. REASONING: Understand what the user wants and determine what tools are needed
-2. TOOL SELECTION: Decide which functions to call (search_products, search_faqs, or both)
-3. PARAMETER EXTRACTION: Extract search parameters and filters from the query to use them with the tools
-
+    return f"""You are a Customer Service Agent. Analyze the user's query and any provided images to understand their intent and plan the appropriate response.
 AVAILABLE TOOLS:
 - search_products: For finding products, recommendations, product details in Milvus database
 - search_faqs: For questions about the business, shipping, returns, general info
+OUTPUT JSON SCHEMA:
+{{
+    "reasoning": "Explanation of user intent and why specific tools are needed",
+    "FunctionCall": [
+        {{
+            "name": "search_products",
+            "args": {{
+                "text": "combined search text with image descriptions",
+                "image": {str(bool(image_url)).lower()},
+                "image_url": {[image_filename] if image_filename else []},
+                "filters": {{
+                    "category": "string or null",
+                    "price_range": {{
+                        "min": 0,
+                        "max": 0,
+                        "operation": "eq"
+                    }},
+                    "attributes": {{
+                        "color": "string or null",
+                        "size": "string or null",
+                        "brand": "string or null",
+                        "material": "string or null"
+                    }}
+                }}
+            }}
+        }}
+    ]
+}}
 
 Instructions:
+- Extract keywords from text query
 - If image provided: describe product style, color, material, category, brand
 - Combine text + image description in the "text" field
 - Set "image" to true/false based on whether image was provided
 - Include image filename in "image_url" array if image exists
 
-FILTER EXTRACTION RULES:
-- category: Extract product category from query/image (e.g., "Desks / Office Desks", "Clothing / Dresses")
-- price_range: Extract budget mentions (e.g., "under $100" → max: 100, operation: "lt")
-- attributes: Extract specific product features (color, size, brand, material)
 User Query: {query}"""
 
 def test_chat():
