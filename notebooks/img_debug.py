@@ -106,14 +106,13 @@ Instructions:
 
 User Query: {query}"""
 
-# === Interactive Chat ===
-def interactive_chat():
+def test_chat():
     llm = GeminiProvider()
-    print("=== 🤖 Interactive Chat with Gemini (Image + Text) ===")
+    print("===  Interactive Chat with Gemini to test Images ===")
 
     while True:
         try:
-            user_input = input("\n🗣️  User query (or type 'exit' to quit): ").strip()
+            user_input = input("\n  User query (or type 'exit' to quit): ").strip()
             if user_input.lower() in {"exit", "quit"}:
                 print("👋 Goodbye!")
                 break
