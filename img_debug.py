@@ -68,7 +68,7 @@ def create_prompt(query: str, image_url: str = None) -> str:
     return f"""You are a Customer Service Agent. Analyze the user's query and any provided images to understand their intent then plan the appropriate response.
 1. REASONING: Understand what the user wants and determine what tools are needed
 2. TOOL SELECTION: Decide which functions to call (search_products, search_faqs, or both)
-3. PARAMETER EXTRACTION: Extract search parameters and filters from the query
+3. PARAMETER EXTRACTION: Extract search parameters and filters from the query to use them with the tools
 
 AVAILABLE TOOLS:
 - search_products: For finding products, recommendations, product details in Milvus database
