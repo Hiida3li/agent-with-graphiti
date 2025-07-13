@@ -65,8 +65,10 @@ class GeminiProvider(LLMProvider):
 def create_prompt(query: str, image_url: str = None) -> str:
     image_filename = os.path.basename(urlparse(image_url).path) if image_url else None
 
-    return f"""You are a Customer Service Agent. Analyze the user query and respond with JSON.
-
+    return f"""You are a Customer Service Agent. Analyze the user's query and any provided images to understand their intent and plan the appropriate response.
+AVAILABLE TOOLS:
+- search_products: For finding products, recommendations, product details in Milvus database
+- search_faqs: For questions about the business, shipping, returns, general info
 OUTPUT JSON SCHEMA:
 {{
     "reasoning": "Explanation of user intent and why specific tools are needed",
