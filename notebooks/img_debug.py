@@ -136,4 +136,4 @@ def test_chat():
 
 # === Main ===
 if __name__ == "__main__":
-    interactive_chat()
+    test_chat()
