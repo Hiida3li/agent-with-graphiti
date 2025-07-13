@@ -104,9 +104,7 @@ Instructions:
 - Set "image" to true/false based on whether image was provided
 - Include image filename in "image_url" array if image exists
 
-User Query: {query}
-Respond to the user with a friendly, short message based on their query.
-"""
+User Query: {query}"""
 
 def test_chat():
     llm = GeminiProvider()
@@ -129,8 +127,6 @@ def test_chat():
 
             print("\n LLM Response:")
             print(response)
-
-
 
         except KeyboardInterrupt:
             print("\n Exiting chat.")
