@@ -117,23 +117,22 @@ def test_chat():
                 print(" Goodbye!")
                 break
 
-            image_url = input("🖼  Optional image URL (press Enter to skip): ").strip()
+            image_url = input("  Optional image URL (press Enter to skip): ").strip()
             image_url = image_url if image_url else None
 
             prompt = create_prompt(user_input, image_url)
-            print("\n📤 Sending request to Gemini...")
+            print("\n Sending request to Gemini...")
 
             response = llm.generate(prompt, image_url)
 
-            print("\n🤖 LLM Response:")
+            print("\n LLM Response:")
             print(response)
 
         except KeyboardInterrupt:
-            print("\n👋 Exiting chat.")
+            print("\n Exiting chat.")
             break
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
 
-# === Main ===
 if __name__ == "__main__":
     test_chat()
