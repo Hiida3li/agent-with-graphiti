@@ -13,7 +13,7 @@ async def main():
 
     response = await client.aio.models.generate_content(
         model="gemini-2.5-flash",
-        contents="Write a short story about a robot who dreams."
+        contents="Write a short story about a robot and another stroy about clouds."
     )
 
     print(response.text)
