@@ -23,7 +23,6 @@ class LLMProvider(ABC):
     def generate(self, prompt: str, image_url: str = None) -> str:
         pass
 
-# === Gemini Provider ===
 class GeminiProvider(LLMProvider):
     def __init__(self, model_name: str = "gemini-2.5-flash"):
         genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
