@@ -114,10 +114,10 @@ def test_chat():
         try:
             user_input = input("\n  User query (or type 'exit' to quit): ").strip()
             if user_input.lower() in {"exit", "quit"}:
-                print("👋 Goodbye!")
+                print(" Goodbye!")
                 break
 
-            image_url = input("🖼️  Optional image URL (press Enter to skip): ").strip()
+            image_url = input("🖼  Optional image URL (press Enter to skip): ").strip()
             image_url = image_url if image_url else None
 
             prompt = create_prompt(user_input, image_url)
