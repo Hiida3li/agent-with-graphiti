@@ -53,7 +53,7 @@ class GeminiProvider:
 
     async def generate_async(self, prompt: str, image_url: str = None) -> str:
         """Asynchronous generation with retry logic."""
-        content = await self._prepare_content(prompt, image_url, sync=False)
+        content = await self._prepare_content_async(prompt, image_url)
         for attempt in range(3):
             try:
                 # FIX: Async calls are made using the .aio property of the same client.
