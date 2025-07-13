@@ -47,7 +47,7 @@ class GeminiProvider(LLMProvider):
                     content,
                     generation_config=genai.types.GenerationConfig(
                         temperature=0,
-                        max_output_tokens=1000,
+                        max_output_tokens=10000,
                         response_mime_type="application/json"
                     )
                 )
@@ -62,7 +62,6 @@ class GeminiProvider(LLMProvider):
 
         return '{"reasoning": "Connection issues", "FunctionCall": []}'
 
-# === Prompt Generator ===
 def create_prompt(query: str, image_url: str = None) -> str:
     image_filename = os.path.basename(urlparse(image_url).path) if image_url else None
 
