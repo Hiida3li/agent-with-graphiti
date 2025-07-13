@@ -77,7 +77,7 @@ class GeminiProvider:
             return [prompt, img]
         except Exception as e:
             logger.error(f"Error processing sync image: {e}")
-            return [prompt]  # Proceed without the image if it fails
+            return [prompt]
 
     async def _prepare_content_async(self, prompt: str, image_url: str = None) -> List[Any]:
         """Helper to prepare content for async image fetching."""
