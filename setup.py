@@ -60,6 +60,9 @@ async def main():
     )
     total_end = time.time()
 
+    print(f"\n Total time for all tasks: {total_end - total_start:.2f} seconds")
+
+
 
 if __name__ == "__main__":
     asyncio.run(main())
