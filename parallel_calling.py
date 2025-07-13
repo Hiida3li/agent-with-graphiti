@@ -61,7 +61,7 @@ class GeminiProvider(LLMProvider):
                     contents=content,
                     config=genai.GenerateContentConfig(
                         temperature=0,
-                        max_output_tokens=10000,
+                        max_output_tokens=20000,
                         response_mime_type="application/json"
                     )
                 )
@@ -95,7 +95,6 @@ class GeminiProvider(LLMProvider):
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                # Using the proper async client from google-genai
                 response = await self.async_client.models.generate_content(
                     model=self.model_name,
                     contents=content,
@@ -150,6 +149,7 @@ class ParallelToolSystem:
         image_filename = os.path.basename(urlparse(image_url).path) if image_url else None
 
         return f"""You are a Customer Service Agent. Analyze the user's query and any provided images to understand their intent and plan the appropriate response.
+TOOL SELECTION: Decide which functions to call (search_products, search_faqs, or both)
 AVAILABLE TOOLS:
 - search_products: For finding products, recommendations, product details in Milvus database
 - search_faqs: For questions about the business, shipping, returns, general info
