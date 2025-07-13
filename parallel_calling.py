@@ -120,7 +120,6 @@ class ToolExecutor:
 
 class ParallelToolSystem:
     """Orchestrates LLM planning and parallel tool execution."""
-
     def __init__(self):
         self.llm = GeminiProvider()
         self.executor = ToolExecutor()
@@ -132,15 +131,15 @@ AVAILABLE TOOLS:
 - search_faqs: For questions about the business, shipping, returns, general info.
 
 OUTPUT a JSON object with your reasoning and a list of functions to call:
-{
+{{
     "reasoning": "Your explanation of the user's intent and why you chose these tools.",
     "FunctionCall": [
-        {
+        {{
             "name": "tool_name",
-            "args": {"arg_name": "value"}
-        }
+            "args": {{"arg_name": "value"}}
+        }}
     ]
-}
+}}
 
 User Query: {query}
 """
