@@ -171,3 +171,4 @@ def insert_test_products():
 
 if __name__ == "__main__":
     insert_test_products()
+
