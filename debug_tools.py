@@ -915,7 +915,6 @@ def search_products(llm_response: str, milvus_client: MilvusClient, embedding_ge
         logger.info(
             f"  First 5 values: {combined_embedding[:5] if len(combined_embedding) >= 5 else combined_embedding}")
 
-        # Perform search
         search_results = milvus_client.search_products(
             embedding=combined_embedding,
             filters=filters,
@@ -924,7 +923,6 @@ def search_products(llm_response: str, milvus_client: MilvusClient, embedding_ge
             limit=5
         )
 
-        # ADD THIS: Log search results details
         logger.info(f"[STEP 4c] Search completed:")
         logger.info(f"  Results count: {len(search_results)}")
         if search_results:
