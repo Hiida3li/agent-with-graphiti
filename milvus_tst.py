@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from openai import OpenAI
 from pymilvus import MilvusClient as PyMilvusClient
+from google.cloud.aiplatform.multimodalembedding import MultiModalEmbeddingModel, EmbeddingInstance
+from typing import List
 
 load_dotenv()
 
@@ -72,16 +74,39 @@ class GeminiProvider(LLMProvider):
 
 
 class EmbeddingGenerator:
-    def __init__(self, model_name: str = "text-embedding-3-small"):
-        self.model_name = model_name
+    """Generates embeddings using Google Cloud Vertex AI."""
+
+    def __init__(self, project_id: str, location: str, model_name: str = "multimodalembedding@001"):
+        """
+        Initializes the Vertex AI client and loads the embedding model.
+
+        Args:
+            project_id: Your Google Cloud project ID.
+            location: The Google Cloud region for your project (e.g., "us-central1").
+            model_name: The name of the embedding model to use.
+        """
+        aiplatform.init(project=project_id, location=location)
+        self.model = MultiModalEmbeddingModel.from_pretrained(model_name)
+        print(f" Initialized Vertex AI EmbeddingGenerator with model '{model_name}'")
 
     def generate_embedding(self, text: str) -> List[float]:
-        """Generate embedding for the given text using OpenAI's embedding model."""
-        response = client.embeddings.create(
-            model=self.model_name,
-            input=text
-        )
-        return response.data[0].embedding
+        """
+        Generate embedding for the given text using Vertex AI's multimodal model.
+
+        Args:
+            text: The input text to embed.
+
+        Returns:
+            A list of floats representing the embedding vector.
+        """
+        # Create an embedding instance for the text
+        instance = EmbeddingInstance(text=text)
+
+        # Send the request to the model
+        response = self.model.embed(instances=[instance])
+
+        # Return the first (and only) embedding from the response
+        return response.predictions[0].embedding
 
 
 class MilvusClient:
@@ -91,7 +116,7 @@ class MilvusClient:
             uri=os.getenv("MILVUS_URI"),
             token=os.getenv("MILVUS_TOKENS")
         )
-        print("✅ Connected to Milvus database")
+        print(" Connected to Milvus database")
 
     def search_products(self, embedding: List[float], filters: Dict[str, Any], limit: int = 5) -> List[Dict]:
         """
