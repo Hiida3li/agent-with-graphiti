@@ -51,12 +51,16 @@ def create_test_collection():
     print(f"✅ Created test collection: {collection_name}")
 
     # Step 2: Create index
+    index_params = {
+        "metric_type": "COSINE",
+        "index_type": "IVF_FLAT",
+        "params": {"nlist": 128}
+    }
+
     client.create_index(
         collection_name=collection_name,
         field_name="text_vector",
-        index_type="IVF_FLAT",
-        metric_type="COSINE",
-        params={"nlist": 128}
+        index_params=index_params
     )
     print("✅ Created vector index")
 
@@ -154,16 +158,16 @@ def insert_test_products():
             collection_name=collection_name,
             data=data_to_insert
         )
-        print(f"✅ Inserted {len(data_to_insert)} products")
+        print(f" Inserted {len(data_to_insert)} products")
 
         # Load collection for search
         client.load_collection(collection_name)
-        print("✅ Collection loaded and ready for search")
+        print(" Collection loaded and ready for search")
 
-        print(f"\n🎉 Test collection '{collection_name}' created with {len(data_to_insert)} products!")
+        print(f"\n Test collection '{collection_name}' created with {len(data_to_insert)} products!")
         print("Now update your search code to use 'products_test' collection name")
     else:
-        print("❌ No products were successfully processed")
+        print(" No products were successfully processed")
 
 
 if __name__ == "__main__":
