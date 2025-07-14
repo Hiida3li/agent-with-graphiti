@@ -373,46 +373,46 @@ class ProductSearchSystem:
 
 def interactive_chat():
     """Interactive command-line interface for product search."""
-    print("🛍️  Welcome to the Multimodal Product Search Assistant!")
-    print("You can search with text and optionally provide an image URL.")
-    print("Type 'exit' or 'quit' to end the conversation.")
-    print("=" * 60)
+    # print(" Welcome to the Multimodal Product Search Assistant!")
+    # print("You can search with text and optionally provide an image URL.")
+    # print("Type 'exit' or 'quit' to end the conversation.")
+    # print("=" * 60)
 
     try:
-        print("🔌 Initializing services...")
+        print(" Initializing services...")
         system = ProductSearchSystem()
-        print("✅ System ready!")
+        print(" System ready!")
     except Exception as e:
-        print(f"❌ Failed to initialize system: {e}")
+        print(f" Failed to initialize system: {e}")
         print("Please check your .env file and cloud credentials.")
         return
 
     while True:
         try:
             print("\n" + "-"*60)
-            user_query = input("💬 You: ").strip()
+            user_query = input(" You: ").strip()
 
             if user_query.lower() in ['exit', 'quit', 'bye', 'goodbye']:
-                print("\n👋 Thank you for shopping with us! Goodbye!")
+                print("\n Thank you for shopping with us! Goodbye!")
                 break
             if not user_query:
                 continue
 
-            image_url = input("🖼️ Image URL (optional, press Enter to skip): ").strip()
+            image_url = input(" Image URL (optional, press Enter to skip): ").strip()
             image_url = image_url if image_url else None
 
-            print("\n🔍 Searching...")
+            print("\n Searching...")
             result = system.search(user_query, image_url)
 
-            print("\n🤖 Assistant:")
+            print("\n Assistant:")
             print(result)
 
         except KeyboardInterrupt:
-            print("\n\n👋 Chat interrupted. Goodbye!")
+            print("\n\n Chat interrupted. Goodbye!")
             break
         except Exception as e:
             logger.error(f"An unexpected error occurred in the chat loop: {e}")
-            print("⚠️  Sorry, a critical error occurred. Please restart.")
+            print("  Sorry, a critical error occurred. Please restart.")
             break
 
 
