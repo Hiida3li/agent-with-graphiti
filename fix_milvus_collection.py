@@ -15,7 +15,6 @@ vertexai.init(project=PROJECT_ID, location=LOCATION)
 def create_test_collection():
     """Create a test collection with 3 sample products"""
 
-    # Initialize Milvus client
     client = MilvusClient(
         uri=os.getenv("MILVUS_URI"),
         token=os.getenv("MILVUS_TOKEN")
@@ -23,7 +22,6 @@ def create_test_collection():
 
     collection_name = "products_test"
 
-    # Step 1: Create collection schema
     fields = [
         FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
         FieldSchema(name="text_vector", dtype=DataType.FLOAT_VECTOR, dim=1408),
@@ -37,7 +35,6 @@ def create_test_collection():
 
     schema = CollectionSchema(fields, "Test collection for multimodal product search")
 
-    # Drop if exists and create new
     try:
         client.drop_collection(collection_name)
         print(f"Dropped existing test collection")
@@ -48,7 +45,7 @@ def create_test_collection():
         collection_name=collection_name,
         schema=schema
     )
-    print(f"✅ Created test collection: {collection_name}")
+    print(f" Created test collection: {collection_name}")
 
     return client, collection_name
 
@@ -69,8 +66,6 @@ def generate_embedding(text, image_url):
         dimension=1408
     )
 
-    # Note: The original code returned image_embedding, but text_embedding might be more appropriate
-    # depending on the search use case. We will stick to the original logic for this fix.
     return embeddings.image_embedding
 
 
@@ -113,7 +108,7 @@ def insert_test_products():
         }
     ]
 
-    print("🔄 Generating embeddings and inserting products...")
+    print(" Generating embeddings and inserting products...")
 
     data_to_insert = []
 
@@ -135,10 +130,10 @@ def insert_test_products():
                 "attributes": product["attributes"]
             })
 
-            print(f"✅ Generated embedding for {product['name']}")
+            print(f" Generated embedding for {product['name']}")
 
         except Exception as e:
-            print(f"❌ Error processing {product['name']}: {e}")
+            print(f" Error processing {product['name']}: {e}")
 
     # Insert all data
     if data_to_insert:
@@ -146,11 +141,9 @@ def insert_test_products():
             collection_name=collection_name,
             data=data_to_insert
         )
-        print(f"✅ Inserted {len(data_to_insert)} products")
+        print(f" Inserted {len(data_to_insert)} products")
 
-        # Create simple index (required for loading collection)
         try:
-            # Prepare and create the index
             index_params = client.prepare_index_params(
                 field_name="text_vector",
                 index_type="FLAT",
@@ -161,20 +154,19 @@ def insert_test_products():
                 collection_name=collection_name,
                 index_params=index_params
             )
-            print("✅ Created FLAT index")
+            print(" Created FLAT index")
 
         except Exception as e:
-            print(f"❌ Index creation failed: {e}")
+            print(f" Index creation failed: {e}")
             return
 
-        # Load collection for search
         client.load_collection(collection_name)
-        print("✅ Collection loaded and ready for search")
+        print(" Collection loaded and ready for search")
 
-        print(f"\n🎉 Test collection '{collection_name}' created with {len(data_to_insert)} products!")
+        print(f"\n Test collection '{collection_name}' created with {len(data_to_insert)} products!")
         print("Now update your search code to use 'products_test' collection name")
     else:
-        print("❌ No products were successfully processed")
+        print(" No products were successfully processed")
 
 
 if __name__ == "__main__":
