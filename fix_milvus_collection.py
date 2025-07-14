@@ -50,20 +50,6 @@ def create_test_collection():
     )
     print(f"✅ Created test collection: {collection_name}")
 
-    # Step 2: Create index
-    index_params = {
-        "metric_type": "COSINE",
-        "index_type": "IVF_FLAT",
-        "params": {"nlist": 128}
-    }
-
-    client.create_index(
-        collection_name=collection_name,
-        field_name="text_vector",
-        index_params=index_params
-    )
-    print("✅ Created vector index")
-
     return client, collection_name
 
 
@@ -125,7 +111,7 @@ def insert_test_products():
         }
     ]
 
-    print("🔄 Generating embeddings and inserting products...")
+    print(" Generating embeddings and inserting products...")
 
     data_to_insert = []
 
@@ -147,10 +133,10 @@ def insert_test_products():
                 "attributes": product["attributes"]
             })
 
-            print(f"✅ Generated embedding for {product['name']}")
+            print(f" Generated embedding for {product['name']}")
 
         except Exception as e:
-            print(f"❌ Error processing {product['name']}: {e}")
+            print(f" Error processing {product['name']}: {e}")
 
     # Insert all data
     if data_to_insert:
@@ -160,9 +146,10 @@ def insert_test_products():
         )
         print(f" Inserted {len(data_to_insert)} products")
 
-        # Load collection for search
+        # Load collection for search (no index needed for 3 products)
         client.load_collection(collection_name)
         print(" Collection loaded and ready for search")
+        print("️  Using brute force search (fine for 3 products)")
 
         print(f"\n Test collection '{collection_name}' created with {len(data_to_insert)} products!")
         print("Now update your search code to use 'products_test' collection name")
