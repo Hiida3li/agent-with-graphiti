@@ -895,7 +895,6 @@ def search_products(llm_response: str, milvus_client: MilvusClient, embedding_ge
         text = args.get("text", "")
         filters = args.get("filters", {})
 
-        # ADD THIS: Log the search parameters
         logger.info(f"[STEP 4a] Search parameters extracted:")
         logger.info(f"  Text: '{text}'")
         logger.info(f"  Image URL: {image_url}")
@@ -905,13 +904,11 @@ def search_products(llm_response: str, milvus_client: MilvusClient, embedding_ge
             logger.warning("No text or image available for embedding.")
             return []
 
-        # Generate embedding and log its properties
         combined_embedding = embedding_generator.generate_embedding(
             text=text,
             image_url=image_url
         )
 
-        # ADD THIS: Log embedding details
         logger.info(f"[STEP 4b] Generated embedding:")
         logger.info(f"  Embedding length: {len(combined_embedding)}")
         logger.info(f"  Embedding type: {type(combined_embedding)}")
