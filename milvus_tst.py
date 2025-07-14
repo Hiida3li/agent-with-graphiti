@@ -24,8 +24,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 
 class LLMProvider(ABC):
     @abstractmethod
@@ -413,7 +411,10 @@ class ProductSearchSystem:
     def __init__(self):
         """Initialize all components with environment variables."""
         self.llm_provider = GeminiProvider()
-        self.embedding_generator = EmbeddingGenerator()
+        self.embedding_generator = EmbeddingGenerator(
+            project_id=os.getenv("GOOGLE_PROJECT_ID"),
+            location=os.getenv("GOOGLE_LOCATION")
+        )
         self.milvus_client = MilvusClient()
 
     def search(self, user_query: str, image_url: str = None) -> str:
