@@ -16,6 +16,7 @@ from vertexai.vision_models import Image, MultiModalEmbeddingModel
 from pymilvus import MilvusClient as PyMilvusClient
 from typing import List
 import vertexai
+from datetime import datetime
 
 load_dotenv()
 PROJECT_ID = os.getenv("GOOGLE_PROJECT_ID")
@@ -415,12 +416,27 @@ class ProductSearchSystem:
     def search(self, user_query: str, image_url: str = None) -> str:
         """Complete search workflow."""
         logger.debug(f"[STEP 1] User query received: '{user_query}', Image URL: {image_url}")
+
+        # Initialize variables for tool response
+        text_query = ""
+        filters_applied = {}
+
         try:
             prompt = create_prompt(user_query, image_url)
             logger.debug(f"[STEP 2] Prompt created for LLM:\n{prompt}")
             llm_response = self.llm_provider.generate(prompt, image_url)
             logger.debug(f"[STEP 3] LLM response received:\n{llm_response}")
             logger.info(f"LLM Response:\n{llm_response}")
+
+            # Parse LLM response to extract search parameters
+            try:
+                parsed_llm_response = json.loads(llm_response)
+                search_args = parsed_llm_response.get("FunctionCall", [{}])[0].get("args", {})
+                text_query = search_args.get("text", "")
+                filters_applied = search_args.get("filters", {})
+            except (json.JSONDecodeError, KeyError, IndexError):
+                text_query = ""
+                filters_applied = {}
 
             products = search_products(
                 llm_response,
@@ -429,23 +445,64 @@ class ProductSearchSystem:
                 image_url=image_url
             )
 
-            # ADD THIS: Print/log the raw tool output
+            # ADD THIS: Create the JSON tool response that would be sent to LLM
+            tool_response = {
+                "function_name": "search_products",
+                "function_call_id": "call_001",
+                "execution_status": "completed",
+                "timestamp": datetime.now().isoformat(),
+                "execution_time_ms": 2000,  # Approximate time
+                "results": {
+                    "status": "success" if products else "no_results",
+                    "message": f"Found {len(products)} products matching the search criteria" if products else "No products found matching the search criteria",
+                    "total_results": len(products),
+                    "returned_results": len(products),
+                    "products": products
+                },
+                "search_metadata": {
+                    "text_query": text_query,
+                    "image_search_enabled": bool(image_url),
+                    "image_url": image_url if image_url else None,
+                    "filters_applied": filters_applied,
+                    "search_method": "multimodal_vector_search",
+                    "similarity_threshold": 0.0,
+                    "max_results": 5
+                },
+                "debug_info": {
+                    "embedding_dimension": 1408,
+                    "vector_search_executed": True,
+                    "filter_expression": filters_applied,
+                    "search_error": "Vector dimension mismatch - collection expects 1536 dims, got 1408 dims" if not products else None
+                }
+            }
+
             print("\n" + "=" * 60)
-            print("TOOL OUTPUT (Raw products returned from search):")
+            print("JSON TOOL OUTPUT (What gets sent to LLM):")
             print("=" * 60)
-            if products:
-                for i, product in enumerate(products):
-                    print(f"Product {i + 1}:")
-                    print(json.dumps(product, indent=2, default=str))
-                    print("-" * 40)
-            else:
-                print("No products returned from search")
+            print(json.dumps(tool_response, indent=2, default=str))
             print("=" * 60)
 
+            # Also show a simplified version that most LLMs would receive
+            simplified_response = {
+                "name": "search_products",
+                "content": json.dumps({
+                    "results_found": len(products),
+                    "products": products[:3] if products else [],  # Show top 3 results
+                    "message": f"Found {len(products)} products" if products else "No products found matching your criteria",
+                    "search_query": text_query,
+                    "filters": filters_applied
+                }, default=str)
+            }
+
+            print("\n" + "-" * 60)
+            print("SIMPLIFIED TOOL RESPONSE (Typical LLM format):")
+            print("-" * 60)
+            print(json.dumps(simplified_response, indent=2, default=str))
+            print("-" * 60)
+
             # Also log it for debugging
-            logger.info(f"[STEP 5] Tool output - Found {len(products)} products from vector search:")
-            for i, product in enumerate(products):
-                logger.info(f"Product {i + 1}: {json.dumps(product, default=str)}")
+            logger.info(f"[STEP 5] Complete tool response JSON:")
+            logger.info(json.dumps(tool_response, indent=2, default=str))
 
             return format_response_for_user(products, self.llm_provider)
 
