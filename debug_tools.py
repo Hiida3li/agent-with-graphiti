@@ -217,20 +217,17 @@ class MilvusClient:
 
     def _build_milvus_expression(self, filters: Dict[str, Any]) -> Optional[str]:
         expressions = []
-
-        # Category filter (exact match)
         if "category" in filters and filters["category"]:
             expressions.append(f'category == "{filters["category"]}"')
 
-        # Price range filters
         if "price_range" in filters and filters["price_range"]:
             price_range = filters["price_range"]
             op = price_range.get("operation")
             if op == "range":
-                if "min" in price_range and price_range["min"] is not None:
-                    expressions.append(f'price >= {price_range["min"]}')
-                if "max" in price_range and price_range["max"] is not None:
-                    expressions.append(f'price <= {price_range["max"]}')
+                if "min" in price_range and price_range["min"] is not None: expressions.append(
+                    f'price >= {price_range["min"]}')
+                if "max" in price_range and price_range["max"] is not None: expressions.append(
+                    f'price <= {price_range["max"]}')
             elif op in ["loe", "lte"] and "max" in price_range and price_range["max"] is not None:
                 expressions.append(f'price <= {price_range["max"]}')
             elif op in ["hoe", "gte"] and "min" in price_range and price_range["min"] is not None:
@@ -238,49 +235,13 @@ class MilvusClient:
             elif op == "eq" and "min" in price_range and price_range["min"] is not None:
                 expressions.append(f'price == {price_range["min"]}')
 
-        # FIXED: Attribute filters - only filter on non-null values and use JSON_CONTAINS
         if "attributes" in filters and filters["attributes"]:
-            attr_expressions = []
+            # This is a simplified approach - you'll need to adapt based on your actual schema
             for attr_name, attr_value in filters["attributes"].items():
-                # Skip null/empty values
-                if attr_value is not None and attr_value != "":
-                    if isinstance(attr_value, str):
-                        # Use JSON_CONTAINS for more flexible matching
-                        attr_expressions.append(
-                            f'JSON_CONTAINS(attributes, "{{\\\"{attr_name}\\\": \\\"{attr_value}\\\"}}")')
-                    elif isinstance(attr_value, (int, float)):
-                        attr_expressions.append(f'JSON_CONTAINS(attributes, "{{\\\"{attr_name}\\\": {attr_value}}}")')
-
-            # If we have any attribute filters, add them with OR logic for attributes
-            # but AND logic between different filter types
-            if attr_expressions:
-                if len(attr_expressions) == 1:
-                    expressions.append(attr_expressions[0])
-                else:
-                    # For multiple attribute filters, use OR (more permissive)
-                    expressions.append(f"({' || '.join(attr_expressions)})")
-
-        return " && ".join(expressions) if expressions else ""
-
-    def _build_milvus_expression_simple(self, filters: Dict[str, Any]) -> Optional[str]:
-        expressions = []
-
-        if "category" in filters and filters["category"]:
-            expressions.append(f'category == "{filters["category"]}"')
-
-        if "price_range" in filters and filters["price_range"]:
-            price_range = filters["price_range"]
-            op = price_range.get("operation")
-            if op == "range":
-                if "min" in price_range and price_range["min"] is not None:
-                    expressions.append(f'price >= {price_range["min"]}')
-                if "max" in price_range and price_range["max"] is not None:
-                    expressions.append(f'price <= {price_range["max"]}')
-
-        if "attributes" in filters and filters["attributes"]:
-            color = filters["attributes"].get("color")
-            if color:
-                expressions.append(f'attributes["color"] == "{color}"')
+                if isinstance(attr_value, str):
+                    expressions.append(f'attributes["{attr_name}"] == "{attr_value}"')
+                elif isinstance(attr_value, (int, float)):
+                    expressions.append(f'attributes["{attr_name}"] == {attr_value}')
 
         return " && ".join(expressions) if expressions else ""
 
