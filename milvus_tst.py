@@ -25,7 +25,7 @@ LOCATION = os.getenv("GOOGLE_LOCATION")
 vertexai.init(project=PROJECT_ID, location=LOCATION)
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -111,7 +111,6 @@ class EmbeddingGenerator:
                 logger.error(f"Failed to load image from {image_url}: {e}. Proceeding with text only.")
                 vertex_image = None # Ensure vertex_image is None if download fails
 
-        # Ensure that at least text or an image is available
         if not text and not vertex_image:
             raise ValueError("At least text or an image must be provided to generate an embedding.")
 
@@ -135,7 +134,6 @@ class EmbeddingGenerator:
             raise
 
 
-# --- Vector Database Client ---
 class MilvusClient:
     def __init__(self):
         """Initialize Milvus client with credentials from .env file."""
@@ -149,6 +147,7 @@ class MilvusClient:
         """
         Search the Milvus database using the embedding and filters.
         """
+        logger.debug(f"[STEP 4] Generating embedding for text: '{text}' and image: {image_url}")
         expr = self._build_milvus_expression(filters)
         logger.info(f"Milvus filter expression: {expr}")
 
@@ -200,17 +199,16 @@ class MilvusClient:
                 expressions.append(f'price == {price_range["min"]}')
 
         if "attributes" in filters and filters["attributes"]:
+            # This is a simplified approach - you'll need to adapt based on your actual schema
             for attr_name, attr_value in filters["attributes"].items():
-                if attr_value is not None:
-                    if isinstance(attr_value, str):
-                        expressions.append(f'json_extract(attributes, "$.{attr_name}") == "{attr_value}"')
-                    else: # Assumes numeric for simplicity
-                        expressions.append(f'json_extract(attributes, "$.{attr_name}") == {attr_value}')
+                if isinstance(attr_value, str):
+                    expressions.append(f'attributes["{attr_name}"] == "{attr_value}"')
+                elif isinstance(attr_value, (int, float)):
+                    expressions.append(f'attributes["{attr_name}"] == {attr_value}')
 
-        return " and ".join(expressions) if expressions else ""
+        return " && ".join(expressions) if expressions else ""
 
 
-# --- Core Workflow Functions ---
 def create_prompt(query: str, image_url: str = None) -> str:
     """Create prompt for LLM to analyze user query and determine search parameters."""
     image_filename = os.path.basename(urlparse(image_url).path) if image_url else "none"
@@ -339,9 +337,9 @@ Do not output JSON. Just provide the friendly text response for the user."""
         return response
 
 
-# --- Main Application System ---
 class ProductSearchSystem:
     """Main system that coordinates all components."""
+    logger.debug(f"[STEP 1] User query received: '{user_query}', Image URL: {image_url}")
     def __init__(self):
         self.llm_provider = GeminiProvider()
         self.embedding_generator = EmbeddingGenerator(
@@ -354,7 +352,9 @@ class ProductSearchSystem:
         """Complete search workflow."""
         try:
             prompt = create_prompt(user_query, image_url)
+            logger.debug(f"[STEP 2] Prompt created for LLM:\n{prompt}")
             llm_response = self.llm_provider.generate(prompt, image_url)
+            logger.debug(f"[STEP 3] LLM response received:\n{llm_response}")
             logger.info(f"LLM Response:\n{llm_response}")
 
             products = search_products(
