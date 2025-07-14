@@ -143,11 +143,14 @@ class MilvusClient:
         )
         logger.info("Connected to Milvus database.")
 
-    def search_products(self, embedding: List[float], filters: Dict[str, Any], limit: int = 5) -> List[Dict]:
+    def search_products(self, embedding: List[float], filters: Dict[str, Any], text: str = "", image_url: str = None,
+                        limit: int = 5):
         """
-        Search the Milvus database using the embedding and filters.
+        Search the Milvus database using the embedding and filters
         """
-        logger.debug(f"[STEP 4] Generating embedding for text: '{text}' and image: {image_url}")
+
+        logger.debug(f"[STEP 4] Searching with text: '{text}' and image: {image_url}")
+
         expr = self._build_milvus_expression(filters)
         logger.info(f"Milvus filter expression: {expr}")
 
