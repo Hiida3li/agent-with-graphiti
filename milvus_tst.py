@@ -339,7 +339,6 @@ Do not output JSON. Just provide the friendly text response for the user."""
 
 class ProductSearchSystem:
     """Main system that coordinates all components."""
-    logger.debug(f"[STEP 1] User query received: '{user_query}', Image URL: {image_url}")
     def __init__(self):
         self.llm_provider = GeminiProvider()
         self.embedding_generator = EmbeddingGenerator(
