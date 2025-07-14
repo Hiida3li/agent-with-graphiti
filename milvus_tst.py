@@ -18,6 +18,7 @@ from typing import List
 import vertexai
 
 
+
 load_dotenv()
 PROJECT_ID = os.getenv("GOOGLE_PROJECT_ID")
 LOCATION = os.getenv("GOOGLE_LOCATION")
@@ -104,7 +105,7 @@ class EmbeddingGenerator:
                 response = requests.get(image_url, timeout=20)
                 response.raise_for_status()
                 # Load image data into a Vertex AI Image object
-                vertex_image = VertexImage(response.content)
+                vertex_image = Image(response.content)
                 logger.debug(f"Successfully loaded image from {image_url}")
             except requests.exceptions.RequestException as e:
                 logger.error(f"Failed to load image from {image_url}: {e}. Proceeding with text only.")
