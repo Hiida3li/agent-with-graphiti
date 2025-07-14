@@ -11,7 +11,6 @@ from urllib.parse import urlparse
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 import google.generativeai as genai
-from openai import OpenAI
 from pymilvus import MilvusClient as PyMilvusClient
 from google.cloud.aiplatform.multimodalembedding import MultiModalEmbeddingModel, EmbeddingInstance
 from typing import List
