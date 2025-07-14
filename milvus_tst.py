@@ -5,7 +5,7 @@ import json
 import logging
 import requests
 import concurrent.futures
-from PIL import Image
+import PIL.Image
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from typing import List, Dict, Any, Optional
@@ -48,7 +48,7 @@ class GeminiProvider(LLMProvider):
             try:
                 response = requests.get(image_url, timeout=10)
                 response.raise_for_status()
-                img = Image.open(io.BytesIO(response.content))
+                img = PIL.Image.open(io.BytesIO(response.content))
                 content.append(img)
             except Exception as e:
                 logger.error(f"Error processing image: {e}")
