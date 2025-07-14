@@ -287,6 +287,8 @@ def search_products(llm_response: str, milvus_client: MilvusClient, embedding_ge
         return milvus_client.search_products(
             embedding=combined_embedding,
             filters=filters,
+            text=text,
+            image_url=image_url,
             limit=5
         )
     except (json.JSONDecodeError, KeyError, TypeError) as e:
