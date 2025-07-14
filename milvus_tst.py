@@ -350,6 +350,7 @@ class ProductSearchSystem:
 
     def search(self, user_query: str, image_url: str = None) -> str:
         """Complete search workflow."""
+        logger.debug(f"[STEP 1] User query received: '{user_query}', Image URL: {image_url}")
         try:
             prompt = create_prompt(user_query, image_url)
             logger.debug(f"[STEP 2] Prompt created for LLM:\n{prompt}")
