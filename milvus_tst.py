@@ -24,7 +24,7 @@ LOCATION = os.getenv("GOOGLE_LOCATION")
 vertexai.init(project=PROJECT_ID, location=LOCATION)
 
 logging.basicConfig(
-    level=logging.INFO, # Changed to INFO for cleaner production output
+    level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -77,68 +77,80 @@ class GeminiProvider(LLMProvider):
 
 
 class EmbeddingGenerator:
-    """Generates embeddings using Google Cloud Vertex AI."""
+    """Generates multimodal embeddings using Google Cloud Vertex AI."""
 
     def __init__(self, project_id: str, location: str, model_name: str = "multimodalembedding@001"):
         """
-        Initializes the Vertex AI client and loads the embedding model.
-
-        Args:
-            project_id: Your Google Cloud project ID.
-            location: The Google Cloud region for your project (e.g., "us-central1").
-            model_name: The name of the embedding model to use.
+        Initializes the Vertex AI client and loads the multimodal embedding model.
         """
-        aiplatform.init(project=project_id, location=location)
         self.model = MultiModalEmbeddingModel.from_pretrained(model_name)
-        print(f" Initialized Vertex AI EmbeddingGenerator with model '{model_name}'")
+        logger.info(f"Initialized Vertex AI EmbeddingGenerator with model '{model_name}'")
 
-    def generate_embedding(self, text: str) -> List[float]:
+    def generate_embedding(self, text: str, image_url: Optional[str] = None) -> List[float]:
         """
-        Generate embedding for the given text using Vertex AI's multimodal model.
+        Generates a multimodal embedding for the given text and/or image.
 
         Args:
             text: The input text to embed.
+            image_url: Optional URL of the input image to embed.
 
         Returns:
             A list of floats representing the embedding vector.
         """
-        # Create an embedding instance for the text
-        instance = EmbeddingInstance(text=text)
+        vertex_image = None
+        # If an image URL is provided, download and load the image
+        if image_url:
+            try:
+                response = requests.get(image_url, timeout=20)
+                response.raise_for_status()
+                # Load image data into a Vertex AI Image object
+                vertex_image = VertexImage(response.content)
+                logger.debug(f"Successfully loaded image from {image_url}")
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Failed to load image from {image_url}: {e}. Proceeding with text only.")
+                vertex_image = None # Ensure vertex_image is None if download fails
 
-        # Send the request to the model
-        response = self.model.embed(instances=[instance])
+        # Ensure that at least text or an image is available
+        if not text and not vertex_image:
+            raise ValueError("At least text or an image must be provided to generate an embedding.")
 
-        # Return the first (and only) embedding from the response
-        return response.predictions[0].embedding
+        try:
+            # Generate embeddings from text and/or image.
+            embeddings = self.model.get_embeddings(
+                contextual_text=text if text else None,
+                image=vertex_image,
+                dimension=1408  # The required dimension for this model
+            )
+
+            # If an image is present, the image_embedding is the multimodal vector.
+            # Otherwise, fallback to the text_embedding.
+            embedding_vector = embeddings.image_embedding if vertex_image else embeddings.text_embedding
+            logger.info("Successfully generated embedding vector.")
+            return embedding_vector
+
+        except Exception as e:
+            logger.error(f"Failed to generate embedding with Vertex AI: {e}")
+            # Re-raise the exception to be handled by the caller
+            raise
 
 
+# --- Vector Database Client ---
 class MilvusClient:
     def __init__(self):
         """Initialize Milvus client with credentials from .env file."""
         self.milvus_client = PyMilvusClient(
             uri=os.getenv("MILVUS_URI"),
-            token=os.getenv("MILVUS_TOKENS")
+            token=os.getenv("MILVUS_TOKEN") # Corrected from MILVUS_TOKENS
         )
-        print(" Connected to Milvus database")
+        logger.info("Connected to Milvus database.")
 
     def search_products(self, embedding: List[float], filters: Dict[str, Any], limit: int = 5) -> List[Dict]:
         """
         Search the Milvus database using the embedding and filters.
-
-        Args:
-            embedding: Vector embedding of the search text
-            filters: Dictionary of filters to apply
-            limit: Maximum number of results to return
-
-        Returns:
-            List of matching products
         """
         expr = self._build_milvus_expression(filters)
-        print("=====================EXP=============================")
-        print(expr)
-        print('======================================================')
+        logger.info(f"Milvus filter expression: {expr}")
 
-        # Perform vector search with filters
         search_params = {
             "metric_type": "COSINE",
             "params": {"nprobe": 10},
@@ -154,8 +166,8 @@ class MilvusClient:
             output_fields=["name", "product_odoo_id", "variant_odoo_id", "category", "price", "attributes"]
         )
         products = []
-        for hits in results:
-            for hit in hits:
+        if results:
+            for hit in results[0]:
                 products.append({
                     "id": hit.id,
                     "score": hit.score,
@@ -166,91 +178,62 @@ class MilvusClient:
                     "category": hit.entity.get("category"),
                     "attributes": hit.entity.get("attributes")
                 })
-
         return products
 
     def _build_milvus_expression(self, filters: Dict[str, Any]) -> Optional[str]:
-        """
-        Build a Milvus expression based on filters.
-
-        Args:
-            filters: Dictionary of filters
-
-        Returns:
-            Milvus expression string or None if no filters
-        """
         expressions = []
-
-        # Add category filter
         if "category" in filters and filters["category"]:
             expressions.append(f'category == "{filters["category"]}"')
 
-        # Add price range filter
         if "price_range" in filters and filters["price_range"]:
             price_range = filters["price_range"]
-            if "operation" in price_range and price_range["operation"] is not None:
-                opr = price_range["operation"]
+            op = price_range.get("operation")
+            if op == "range":
+                if "min" in price_range and price_range["min"] is not None: expressions.append(f'price >= {price_range["min"]}')
+                if "max" in price_range and price_range["max"] is not None: expressions.append(f'price <= {price_range["max"]}')
+            elif op in ["loe", "lte"] and "max" in price_range and price_range["max"] is not None:
+                expressions.append(f'price <= {price_range["max"]}')
+            elif op in ["hoe", "gte"] and "min" in price_range and price_range["min"] is not None:
+                expressions.append(f'price >= {price_range["min"]}')
+            elif op == "eq" and "min" in price_range and price_range["min"] is not None:
+                expressions.append(f'price == {price_range["min"]}')
 
-                if opr == "range":
-                    if "min" in price_range and price_range["min"] is not None:
-                        expressions.append(f'price >= {price_range["min"]}')
-                    if "max" in price_range and price_range["max"] is not None:
-                        expressions.append(f'price <= {price_range["max"]}')
-
-                if opr in ["loe", "lte"]:
-                    if "max" in price_range and price_range["max"] is not None:
-                        expressions.append(f'price <= {price_range["max"]}')
-
-                if opr in ["hoe", "gte"]:
-                    if "min" in price_range and price_range["min"] is not None:
-                        expressions.append(f'price >= {price_range["min"]}')
-
-                if opr == "eq":
-                    if "min" in price_range and price_range["min"] is not None:
-                        expressions.append(f'price == {price_range["min"]}')
-
-        # Add attribute filters
         if "attributes" in filters and filters["attributes"]:
             for attr_name, attr_value in filters["attributes"].items():
                 if attr_value is not None:
                     if isinstance(attr_value, str):
-                        expressions.append(f'attributes["{attr_name}"] == "{attr_value}"')
-                    elif isinstance(attr_value, (int, float)):
-                        expressions.append(f'attributes["{attr_name}"] == {attr_value}')
+                        expressions.append(f'json_extract(attributes, "$.{attr_name}") == "{attr_value}"')
+                    else: # Assumes numeric for simplicity
+                        expressions.append(f'json_extract(attributes, "$.{attr_name}") == {attr_value}')
 
-        # Combine all expressions with AND
-        if expressions:
-            print("========================================")
-            print(" && ".join(expressions))
-            print("========================================")
-            return " && ".join(expressions)
-        return None
+        return " and ".join(expressions) if expressions else ""
 
 
+# --- Core Workflow Functions ---
 def create_prompt(query: str, image_url: str = None) -> str:
     """Create prompt for LLM to analyze user query and determine search parameters."""
-    image_filename = os.path.basename(urlparse(image_url).path) if image_url else None
+    image_filename = os.path.basename(urlparse(image_url).path) if image_url else "none"
 
     return f"""You are a Customer Service Agent. Analyze the user's query and any provided images to understand their intent and plan the appropriate response.
 AVAILABLE TOOLS:
-- search_products: For finding products, recommendations, product details in Milvus database
-- search_faqs: For questions about the business, shipping, returns, general info
+- search_products: For finding products, recommendations, product details in Milvus database.
+- search_faqs: For questions about the business, shipping, returns, general info.
 OUTPUT JSON SCHEMA:
 {{
-    "reasoning": "Explanation of user intent and why specific tools are needed",
+    "reasoning": "Explanation of user intent and why specific tools are needed.",
     "FunctionCall": [
         {{
             "name": "search_products",
             "args": {{
-                "text": "combined search text with image descriptions",
+                "text": "A combined search text including keywords from the user query and descriptions of the image content (style, color, material, etc.).",
                 "image": {str(bool(image_url)).lower()},
-                "image_url": {[image_filename] if image_filename else []},
+                "image_url": "{image_filename}",
                 "filters": {{
                     "category": "string or null",
                     "price_range": {{
-                        "min": 0,
-                        "max": 0,
-                        "operation": "eq"
+                        "min": "number or null",
+                        "max": "number or null",
+                        "operation": "string (e.g., 'range', 'lte', 'gte', 'eq') or null"
                     }},
                     "attributes": {{
                         "color": "string or null",
@@ -264,88 +247,46 @@ OUTPUT JSON SCHEMA:
     ]
 }}
 
-Instructions:
-- Extract keywords from text query
-- If image provided: describe product style, color, material, category, brand
-- Combine text + image description in the "text" field
-- Set "image" to true/false based on whether image was provided
-- Include image filename in "image_url" array if image exists
+INSTRUCTIONS:
+- Extract keywords and intent from the user's text query.
+- If an image is provided, describe its key features (product type, style, color, pattern, material, brand if visible).
+- Combine the text query keywords and image description into a coherent search query in the "text" field.
+- Set the "image" field to true or false.
+- Extract any specific filters mentioned (category, price, color, size, etc.) and place them in the filters object.
 
 User Query: {query}"""
 
 
-def search_products(llm_response: str, milvus_client: MilvusClient, embedding_generator: EmbeddingGenerator) -> List[
-    Dict]:
+def search_products(llm_response: str, milvus_client: MilvusClient, embedding_generator: EmbeddingGenerator, image_url: Optional[str] = None) -> List[Dict]:
     """
-    Search products based on LLM response containing text and image information.
-
-    Args:
-        llm_response: JSON string from LLM containing search parameters
-        milvus_client: Milvus client instance with search_products method
-        embedding_generator: EmbeddingGenerator instance
-
-    Returns:
-        List of product dictionaries
+    Search products based on LLM response using a multimodal embedding.
     """
     try:
-        # Parse LLM response
         response_data = json.loads(llm_response)
-
-        # Find search_products function call
-        function_calls = response_data.get("FunctionCall", [])
         search_call = next(
-            (call for call in function_calls if call.get("name") == "search_products"),
+            (call for call in response_data.get("FunctionCall", []) if call.get("name") == "search_products"),
             None
         )
-
         if not search_call:
             return []
 
         args = search_call.get("args", {})
         text = args.get("text", "")
-        image_urls = args.get("image_url", [])
         filters = args.get("filters", {})
 
-        # Prepare embedding inputs
-        embedding_inputs = []
-
-        if text:
-            embedding_inputs.append(text)
-
-        if image_urls:
-            # Combine image filenames as additional context
-            image_context = f"image: {' '.join(image_urls)}"
-            embedding_inputs.append(image_context)
-
-        if not embedding_inputs:
+        if not text and not image_url:
+            logger.warning("No text or image available for embedding.")
             return []
 
-        # Generate embeddings in parallel
-        embeddings = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=len(embedding_inputs)) as executor:
-            # Submit all embedding tasks
-            futures = [
-                executor.submit(embedding_generator.generate_embedding, input_text)
-                for input_text in embedding_inputs
-            ]
-
-            # Collect results as they complete
-            for future in concurrent.futures.as_completed(futures):
-                embeddings.append(future.result())
-
-        # Combine embeddings by averaging
-        combined_embedding = [
-            sum(dim_values) / len(embeddings)
-            for dim_values in zip(*embeddings)
-        ]
-
-        # Search Milvus with combined embedding and filters
+        combined_embedding = embedding_generator.generate_embedding(
+            text=text,
+            image_url=image_url
+        )
         return milvus_client.search_products(
             embedding=combined_embedding,
             filters=filters,
             limit=5
         )
-
     except (json.JSONDecodeError, KeyError, TypeError) as e:
         logger.error(f"Error processing LLM response: {e}")
         return []
@@ -355,175 +296,140 @@ def search_products(llm_response: str, milvus_client: MilvusClient, embedding_ge
 
 
 def format_response_for_user(products: List[Dict], llm_provider: LLMProvider) -> str:
-    """
-    Format search results for end user using LLM.
-
-    Args:
-        products: List of product dictionaries from search
-        llm_provider: LLM provider instance
-
-    Returns:
-        Formatted response string for end user
-    """
+    """Format search results for end user using LLM."""
     if not products:
         return "I couldn't find any products matching your criteria. Please try adjusting your search terms or filters."
 
-    # Create a summary of products for the LLM
-    products_summary = []
-    for i, product in enumerate(products, 1):
-        product_info = {
-            "rank": i,
-            "name": product.get("name", "Unknown"),
-            "price": product.get("price", "N/A"),
-            "category": product.get("category", "N/A"),
-            "attributes": product.get("attributes", {}),
-            "similarity_score": round(product.get("score", 0), 2)
-        }
-        products_summary.append(product_info)
+    products_summary = [
+        {
+            "rank": i + 1,
+            "name": p.get("name", "N/A"),
+            "price": p.get("price", "N/A"),
+            "category": p.get("category", "N/A"),
+            "attributes": p.get("attributes", {}),
+            "similarity_score": round(p.get("score", 0), 2)
+        } for i, p in enumerate(products)
+    ]
 
-    format_prompt = f"""Format these search results for a customer in a friendly, helpful way:
+    format_prompt = f"""You are a helpful and friendly shopping assistant.
+A customer has searched for a product, and here are the results. Please format them in a conversational and appealing way.
 
-Products Found: {json.dumps(products_summary, indent=2)}
+SEARCH RESULTS (JSON):
+{json.dumps(products_summary, indent=2)}
 
-Please provide:
-1. A brief introduction acknowledging their search
-2. List the products with key details (name, price, relevant attributes)
-3. Highlight the most relevant matches
-4. Offer to help with more specific searches if needed
-
-Keep the tone conversational and helpful."""
+INSTRUCTIONS:
+1.  Start with a friendly opening.
+2.  Present the top products clearly. You can use a list. Mention the name and price.
+3.  Briefly highlight why these items might be a good match, perhaps referencing the top result's similarity score.
+4.  Keep it concise and easy to read.
+5.  End with an offer to refine the search or answer more questions.
+Do not output JSON. Just provide the friendly text response for the user."""
 
     try:
         formatted_response = llm_provider.generate(format_prompt)
-        # If the response is JSON, extract the text content
-        try:
-            response_json = json.loads(formatted_response)
-            return response_json.get("text", formatted_response)
-        except:
-            return formatted_response
+        # The LLM is now instructed to return text directly, so no JSON parsing is needed.
+        return formatted_response
     except Exception as e:
-        logger.error(f"Error formatting response: {e}")
+        logger.error(f"Error formatting response with LLM: {e}")
         # Fallback to simple formatting
         response = f"I found {len(products)} products for you:\n\n"
         for i, product in enumerate(products, 1):
-            response += f"{i}. {product.get('name', 'Unknown')} - ${product.get('price', 'N/A')}\n"
+            response += f"{i}. {product.get('name', 'Unknown')} - ${product.get('price', 'N/A'):.2f}\n"
         return response
 
 
+# --- Main Application System ---
 class ProductSearchSystem:
     """Main system that coordinates all components."""
-
     def __init__(self):
-        """Initialize all components with environment variables."""
         self.llm_provider = GeminiProvider()
         self.embedding_generator = EmbeddingGenerator(
-            project_id=os.getenv("GOOGLE_PROJECT_ID"),
-            location=os.getenv("GOOGLE_LOCATION")
+            project_id=PROJECT_ID,
+            location=LOCATION
         )
         self.milvus_client = MilvusClient()
 
     def search(self, user_query: str, image_url: str = None) -> str:
-        """
-        Complete search workflow.
-
-        Args:
-            user_query: User's search query
-            image_url: Optional image URL
-
-        Returns:
-            Formatted response for end user
-        """
+        """Complete search workflow."""
         try:
-            # Step 1: Generate search parameters using LLM
             prompt = create_prompt(user_query, image_url)
             llm_response = self.llm_provider.generate(prompt, image_url)
+            logger.info(f"LLM Response:\n{llm_response}")
 
-            print("LLM Response:")
-            print(llm_response)
-            print("\n" + "=" * 50 + "\n")
+            products = search_products(
+                llm_response,
+                self.milvus_client,
+                self.embedding_generator,
+                image_url=image_url
+            )
+            logger.info(f"Found {len(products)} products from vector search.")
 
-            # Step 2: Search products using embedding and filters
-            products = search_products(llm_response, self.milvus_client, self.embedding_generator)
-
-            print(f"Found {len(products)} products")
-            print("\n" + "=" * 50 + "\n")
-
-            # Step 3: Format response for end user
-            formatted_response = format_response_for_user(products, self.llm_provider)
-
-            return formatted_response
+            return format_response_for_user(products, self.llm_provider)
 
         except Exception as e:
-            logger.error(f"Error in search workflow: {e}")
-            return "I apologize, but I encountered an error while searching for products. Please try again later."
+            logger.error(f"Error in main search workflow: {e}")
+            return "I apologize, but I encountered an error while searching. Please try again later."
 
 
 def interactive_chat():
-    """
-    Interactive chat interface for product search.
-    """
-    print("🛍️  Welcome to the Product Search Assistant!")
+    """Interactive command-line interface for product search."""
+    print("🛍️  Welcome to the Multimodal Product Search Assistant!")
+    print("You can search with text and optionally provide an image URL.")
     print("Type 'exit' or 'quit' to end the conversation.")
     print("=" * 60)
 
     try:
-        # Initialize the search system
-        print("🔌 Connecting to services...")
+        print("🔌 Initializing services...")
         system = ProductSearchSystem()
-        print("✅ All systems ready!")
+        print("✅ System ready!")
     except Exception as e:
         print(f"❌ Failed to initialize system: {e}")
-        print("Please check your .env file and API credentials.")
+        print("Please check your .env file and cloud credentials.")
         return
 
     while True:
         try:
-            # Get user input
-            print("\n💬 What are you looking for?")
-            user_query = input("You: ").strip()
+            print("\n" + "-"*60)
+            user_query = input("💬 You: ").strip()
 
-            # Check for exit commands
             if user_query.lower() in ['exit', 'quit', 'bye', 'goodbye']:
-                print("\n👋 Thank you for using our product search! Goodbye!")
+                print("\n👋 Thank you for shopping with us! Goodbye!")
                 break
-
             if not user_query:
-                print("⚠️  Please enter a search query.")
                 continue
 
-            # Get optional image URL
-            print("\n🖼️  Do you have an image URL? (Press Enter to skip)")
-            image_url = input("Image URL: ").strip()
+            image_url = input("🖼️ Image URL (optional, press Enter to skip): ").strip()
             image_url = image_url if image_url else None
 
-            # Show processing message
-            print("\n🔍 Searching for products...")
-
-            # Perform search
+            print("\n🔍 Searching...")
             result = system.search(user_query, image_url)
 
-            # Display results
             print("\n🤖 Assistant:")
             print(result)
-            print("\n" + "=" * 60)
 
         except KeyboardInterrupt:
             print("\n\n👋 Chat interrupted. Goodbye!")
             break
         except Exception as e:
-            logger.error(f"Error in interactive chat: {e}")
-            print("⚠️  Sorry, I encountered an error. Please try again.")
+            logger.error(f"An unexpected error occurred in the chat loop: {e}")
+            print("⚠️  Sorry, a critical error occurred. Please restart.")
+            break
 
 
 if __name__ == "__main__":
-    # Check if required environment variables are set
-    required_vars = ["MILVUS_URI", "MILVUS_TOKENS", "GOOGLE_API_KEY", "OPENAI_API_KEY"]
+    required_vars = [
+        "GOOGLE_PROJECT_ID",
+        "GOOGLE_LOCATION",
+        "GOOGLE_API_KEY",
+        "MILVUS_URI",
+        "MILVUS_TOKEN"
+    ]
     missing_vars = [var for var in required_vars if not os.getenv(var)]
 
     if missing_vars:
-        print("❌ Missing required environment variables:")
+        print(" Missing required environment variables:")
         for var in missing_vars:
             print(f"   - {var}")
-        print("\nPlease add them to your .env file and try again.")
+        print("\nPlease create a .env file and add the missing variables.")
     else:
         interactive_chat()
