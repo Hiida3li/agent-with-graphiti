@@ -25,8 +25,11 @@ vertexai.init(project=PROJECT_ID, location=LOCATION)
 
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename='log_file.log',
+    filemode='w'
 )
+
 logger = logging.getLogger(__name__)
 
 
