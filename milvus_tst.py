@@ -20,10 +20,11 @@ import vertexai
 
 load_dotenv()
 PROJECT_ID = os.getenv("GOOGLE_PROJECT_ID")
-vertexai.init(project=PROJECT_ID, location="us-central1")
+LOCATION = os.getenv("GOOGLE_LOCATION")
+vertexai.init(project=PROJECT_ID, location=LOCATION)
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO, # Changed to INFO for cleaner production output
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
