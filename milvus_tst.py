@@ -15,8 +15,12 @@ from google.cloud import aiplatform
 from vertexai.vision_models import Image, MultiModalEmbeddingModel
 from pymilvus import MilvusClient as PyMilvusClient
 from typing import List
+import vertexai
+
 
 load_dotenv()
+PROJECT_ID = os.getenv("GOOGLE_PROJECT_ID")
+vertexai.init(project=PROJECT_ID, location="us-central1")
 
 logging.basicConfig(
     level=logging.DEBUG,
