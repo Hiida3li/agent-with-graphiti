@@ -265,11 +265,9 @@ class MilvusClient:
     def _build_milvus_expression_simple(self, filters: Dict[str, Any]) -> Optional[str]:
         expressions = []
 
-        # Category filter
         if "category" in filters and filters["category"]:
             expressions.append(f'category == "{filters["category"]}"')
 
-        # Price filters (same as before)
         if "price_range" in filters and filters["price_range"]:
             price_range = filters["price_range"]
             op = price_range.get("operation")
