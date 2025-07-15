@@ -266,7 +266,7 @@ OUTPUT JSON SCHEMA:
             "args": {{
                 "text": "A combined search text including keywords from the user query and descriptions of the image content (style, color, material, etc.).",
                 "image": {str(bool(image_url)).lower()},
-                "image_url": "{image_filename}",
+                "image_url": "{image_url}",
                 "filters": {{
                     "category": "string or null",
                     "price_range": {{
