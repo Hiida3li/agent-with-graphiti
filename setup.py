@@ -18,9 +18,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ----------------------------------------------------
-# 1. Define your actual Python functions for the tools
-# ----------------------------------------------------
+
 
 def search_products(text: str, filters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
     """
@@ -45,10 +43,7 @@ def search_products(text: str, filters: Dict[str, Any] = None) -> List[Dict[str,
         A list of dictionaries, where each dictionary represents a product.
     """
     logger.info(f"Tool Call: search_products(text='{text}', filters={filters})")
-    # In a real microservice setup, this function would likely
-    # just log the call and exit, as the actual search happens
-    # in your separate QuixStreams consumer.
-    # For demonstration, we'll return a mock result similar to your previous example.
+
     mock_products = [
         {
             "id": "iphone-15-pro-red",
@@ -149,9 +144,7 @@ def search_faqs(text: str) -> List[Dict[str, str]]:
             results.append(faq)
     return results
 
-# ----------------------------------------------------
-# 2. Update the TOOLS list to use the function objects
-# ----------------------------------------------------
+
 TOOLS = [search_products, search_faqs] # <--- Changed this line!
 
 class LLMProvider(ABC):
