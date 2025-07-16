@@ -180,7 +180,7 @@ class MilvusClient:
                 output_fields=["name", "product_odoo_id", "variant_odoo_id", "category", "price", "attributes"]
             )
 
-            # ADD THIS: Log raw Milvus results
+
             logger.info(f"[STEP 4e] Raw Milvus results:")
             logger.info(f"  Results type: {type(results)}")
             logger.info(f"  Results length: {len(results) if results else 0}")
