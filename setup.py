@@ -190,7 +190,6 @@ class GeminiProvider(LLMProvider):
 
 def generate_final_response(context: Dict[str, Any], prompt_template: str) -> str:
     """Generate final LLM response with updated context including function execution results"""
-    # Initialize LLM provider (reuse the same one)
     # Ensure this LLMProvider instance also has access to the tools for potential
     # multi-turn interaction or re-evaluation if needed during synthesis.
     # For now, it's just generating text, so tools aren't strictly necessary here.
