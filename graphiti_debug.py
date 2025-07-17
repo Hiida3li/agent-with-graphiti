@@ -226,9 +226,7 @@ class GraphMemory:
             result = session.run(query, session_id=session_id)
             return [record.data() for record in result]
 
-# ─────────────────────────────────────────────────────────────
-# Agent with Gemini reasoning
-# ─────────────────────────────────────────────────────────────
+
 class Agent:
     def __init__(self, memory: GraphMemory, session_id: str):
         self.memory = memory
