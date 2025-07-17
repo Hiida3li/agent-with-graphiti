@@ -69,12 +69,12 @@ class Agent:
         self.session_id = session_id
 
     def check_memory(self):
-        print("\n📚 Previous tool calls:")
+        print("\n Previous tool calls:")
         history = self.memory.get_tool_history(self.session_id)
         if not history:
-            print("🔸 No memory yet.")
+            print(" No memory yet.")
         for h in history:
-            print(f"🔹 {h['timestamp']} | {h['tool_name']} | args={h['args']} → result={h['result']}")
+            print(f" {h['timestamp']} | {h['tool_name']} | args={h['args']} → result={h['result']}")
         return history
 
     def call_tool(self, tool_name, args):
@@ -112,46 +112,44 @@ class Agent:
             result1 = self.call_tool("search_products", args1)
 
             if result1["total_found"] == 0:
-                print("❌ Red color not found. Trying black...")
+                print(" Red color not found. Trying black...")
                 args2 = {"text": "iphone 15 pro", "filters": {"color": "black", "price_range": {"max": 400}}}
                 result2 = self.call_tool("search_products", args2)
 
                 if result2["total_found"] > 0:
                     product = result2["products"][0]
-                    print(f"✅ Found: {product['name']} in {product['color']} for {product['price']} OMR")
+                    print(f" Found: {product['name']} in {product['color']} for {product['price']} OMR")
             else:
-                print("✅ Found red iPhone!")
+                print(" Found red iPhone!")
 
         elif "place order" in user_input:
             order_args = {"product_id": "p123", "user_id": "user001"}
             result = self.call_tool("place_order", order_args)
             if result["status"] == "success":
-                print(f"📦 Order placed! Order number: {result['order_number']}")
+                print(f" Order placed! Order number: {result['order_number']}")
             else:
-                print("❌ Failed to place order.")
+                print(" Failed to place order.")
 
         elif "memory" in user_input:
             self.check_memory()
 
         elif user_input in ["exit", "quit"]:
-            print("👋 Exiting chat.")
+            print(" Exiting chat.")
             return False
 
         else:
-            print("🤖 I didn't understand. Try: 'buy iPhone', 'place order', or 'memory'")
+            print(" I didn't understand. Try: 'buy iPhone', 'place order', or 'memory'")
 
         return True
 
 
-# ─────────────────────────────────────────────────────────────
-# Run Chat
-# ─────────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
     memory = GraphMemory(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
     session_id = "chat-001"
     agent = Agent(memory, session_id)
 
-    print("🤖 Interactive Agent Chat (type 'exit' to quit)")
+    print(" Interactive Agent Chat (type 'exit' to quit)")
     while True:
         user_input = input("\n👤 You: ")
         if not agent.respond_to_user(user_input):
