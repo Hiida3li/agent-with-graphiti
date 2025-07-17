@@ -227,16 +227,14 @@ class GraphMemory:
             result = session.run(query, session_id=session_id)
             return [record.data() for record in result]
 
-# ─────────────────────────────────────────────────────────────
-# Agent with Gemini reasoning
-# ─────────────────────────────────────────────────────────────
+
 class Agent:
     def __init__(self, memory: GraphMemory, session_id: str):
         self.memory = memory
         self.session_id = session_id
 
     def call_tool(self, tool_name, args):
-        print(f"🔧 Calling tool: {tool_name} with args: {args}")
+        print(f" Calling tool: {tool_name} with args: {args}")
 
         # Dummy tool behavior
         if tool_name == "search_products":
@@ -269,8 +267,14 @@ class Agent:
             ])
 
         prompt = f"""
-You are an AI assistant helping users shop online.
-You have access to memory of tool calls for this session.
+You are a helpful and proactive eCommerce customer service agent. Your job is to understand the user's intent and help them find the product information they need.
+
+If the tool result does not return any products that match the user's request:
+- Try alternative arguments or variants.
+  - For example, if the user asked for a red product and nothing was found, retry with a different color.
+  - If the user requested a product under 200 OMR and no result was found, retry with a slightly higher price (e.g., up to 250 OMR).
+
+Your goal is to find and recommend a suitable product, even if it means adjusting the filters intelligently to meet the user's needs as closely as possible.
 
 Memory:
 {context}
