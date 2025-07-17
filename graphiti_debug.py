@@ -175,8 +175,9 @@ NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+
 genai.configure(api_key=GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel("gemini-2.5-flash")
+gemini_model = genai.GenerativeModel("gemini-1.5-flash")
 
 
 class GraphMemory:
@@ -226,7 +227,9 @@ class GraphMemory:
             result = session.run(query, session_id=session_id)
             return [record.data() for record in result]
 
-
+# ─────────────────────────────────────────────────────────────
+# Agent with Gemini reasoning
+# ─────────────────────────────────────────────────────────────
 class Agent:
     def __init__(self, memory: GraphMemory, session_id: str):
         self.memory = memory
@@ -296,7 +299,7 @@ if __name__ == "__main__":
 
     print("🤖 Interactive Agent Chat with Gemini (type 'exit' to quit)")
     while True:
-        user_input = input("\n You: ")
+        user_input = input("\n👤 You: ")
         if not agent.respond_to_user(user_input):
             break
 
