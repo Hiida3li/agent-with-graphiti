@@ -5,13 +5,16 @@ import time
 from datetime import datetime
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
-
+import google.generativeai as genai
 load_dotenv()
 
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 NEO4J_DATABASE = os.getenv("NEO4J_DATABASE")
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 
 class GraphMemory:
