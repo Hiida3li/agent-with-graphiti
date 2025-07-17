@@ -1,12 +1,11 @@
-from neo4j import GraphDatabase
-import uuid
-from datetime import datetime
-import time
 import os
 import json
+import uuid
+import time
+from datetime import datetime
+from neo4j import GraphDatabase
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 NEO4J_URI = os.getenv("NEO4J_URI")
@@ -15,9 +14,6 @@ NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 NEO4J_DATABASE = os.getenv("NEO4J_DATABASE")
 
 
-# ─────────────────────────────────────────────────────────────
-# Graph Memory Class
-# ─────────────────────────────────────────────────────────────
 class GraphMemory:
     def __init__(self, uri, user, password):
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
@@ -67,74 +63,100 @@ class GraphMemory:
 
 
 # ─────────────────────────────────────────────────────────────
-# Agent Class
+# Agent
 # ─────────────────────────────────────────────────────────────
 class Agent:
     def __init__(self, memory: GraphMemory, session_id: str):
         self.memory = memory
         self.session_id = session_id
 
+    def check_memory(self):
+        print("\n📚 Previous tool calls:")
+        history = self.memory.get_tool_history(self.session_id)
+        if not history:
+            print("🔸 No memory yet.")
+        for h in history:
+            print(f"🔹 {h['timestamp']} | {h['tool_name']} | args={h['args']} → result={h['result']}")
+        return history
+
     def call_tool(self, tool_name, args):
         print(f"🔧 Calling tool: {tool_name} with args: {args}")
 
-        # Simulated tool behavior
+        # Dummy tool behavior
         if tool_name == "search_products":
-            if args['filters']['color'] == "red":
+            color = args["filters"].get("color", "black")
+            if color == "red":
                 result = {"total_found": 0, "products": []}
             else:
-                result = {"total_found": 1, "products": [{"name": "iPhone 15 Pro", "color": "black", "price": 395}]}
+                result = {
+                    "total_found": 1,
+                    "products": [
+                        {"id": "p123", "name": "iPhone 15 Pro", "color": color, "price": 395}
+                    ]
+                }
         elif tool_name == "place_order":
-            result = {"status": "success", "order_number": "ORD9981"}
+            result = {"status": "success", "order_number": f"ORD-{uuid.uuid4().hex[:6]}"}
         else:
             result = {"status": "unknown tool"}
 
-        # Log to memory
         self.memory.log_tool_call(self.session_id, tool_name, args, result)
         return result
 
-    def handle_user_request(self):
-        print("\n📚 Checking previous tool calls...")
-        history = self.memory.get_tool_history(self.session_id)
-        if history:
-            for h in history:
-                print(f"🔹 {h['timestamp']} | {h['tool_name']} | args={h['args']} → result={h['result']}")
+    def respond_to_user(self, user_input):
+        user_input = user_input.lower()
+
+        if "buy" in user_input or "iphone" in user_input:
+            self.check_memory()
+            print("\n🛒 You asked to buy iPhone 15 Pro under 400 OMR")
+
+            # Try red iPhone
+            args1 = {"text": "iphone 15 pro", "filters": {"color": "red", "price_range": {"max": 400}}}
+            result1 = self.call_tool("search_products", args1)
+
+            if result1["total_found"] == 0:
+                print("❌ Red color not found. Trying black...")
+                args2 = {"text": "iphone 15 pro", "filters": {"color": "black", "price_range": {"max": 400}}}
+                result2 = self.call_tool("search_products", args2)
+
+                if result2["total_found"] > 0:
+                    product = result2["products"][0]
+                    print(f"✅ Found: {product['name']} in {product['color']} for {product['price']} OMR")
+            else:
+                print("✅ Found red iPhone!")
+
+        elif "place order" in user_input:
+            order_args = {"product_id": "p123", "user_id": "user001"}
+            result = self.call_tool("place_order", order_args)
+            if result["status"] == "success":
+                print(f"📦 Order placed! Order number: {result['order_number']}")
+            else:
+                print("❌ Failed to place order.")
+
+        elif "memory" in user_input:
+            self.check_memory()
+
+        elif user_input in ["exit", "quit"]:
+            print("👋 Exiting chat.")
+            return False
+
         else:
-            print("🔸 No previous tool calls found.")
+            print("🤖 I didn't understand. Try: 'buy iPhone', 'place order', or 'memory'")
 
-        print("\n🛒 User wants to buy an iPhone 15 Pro under 400 OMR")
-
-        # Attempt 1: red iPhone
-        args1 = {"text": "iphone 15 pro", "filters": {"color": "red", "price_range": {"max": 400}}}
-        result1 = self.call_tool("search_products", args1)
-
-        if result1['total_found'] == 0:
-            print("❌ No products found in red. Retrying with black...")
-            time.sleep(1)
-            args2 = {"text": "iphone 15 pro", "filters": {"color": "black", "price_range": {"max": 400}}}
-            result2 = self.call_tool("search_products", args2)
-
-            if result2['total_found'] > 0:
-                product = result2['products'][0]
-                print(f"✅ Found product: {product['name']} for {product['price']} OMR")
-                order_args = {"product_id": "abc123", "user_id": "U456"}
-                result3 = self.call_tool("place_order", order_args)
-
-                if result3['status'] == "success":
-                    print(f"📦 Order placed! Order number: {result3['order_number']}")
-                else:
-                    print("❌ Failed to place order")
-        else:
-            print("✅ Found product in first try!")
+        return True
 
 
 # ─────────────────────────────────────────────────────────────
-# Run
+# Run Chat
 # ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     memory = GraphMemory(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
     session_id = "chat-001"
-
     agent = Agent(memory, session_id)
-    agent.handle_user_request()
+
+    print("🤖 Interactive Agent Chat (type 'exit' to quit)")
+    while True:
+        user_input = input("\n👤 You: ")
+        if not agent.respond_to_user(user_input):
+            break
 
     memory.close()
