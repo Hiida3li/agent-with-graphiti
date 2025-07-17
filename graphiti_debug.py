@@ -296,12 +296,12 @@ Reply helpfully using the memory context.
 
 if __name__ == "__main__":
     memory = GraphMemory(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
-    session_id = "chat-001"
+    session_id = ""
     agent = Agent(memory, session_id)
 
     print(" Interactive Agent Chat with Gemini (type 'exit' to quit)")
     while True:
-        user_input = input("\n👤 You: ")
+        user_input = input("\n You: ")
         if not agent.respond_to_user(user_input):
             break
 
