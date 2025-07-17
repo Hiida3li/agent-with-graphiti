@@ -143,7 +143,6 @@ class Agent:
         return True
 
 
-
 if __name__ == "__main__":
     memory = GraphMemory(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
     session_id = "chat-001"
