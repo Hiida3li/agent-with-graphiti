@@ -41,8 +41,8 @@ class LLMProvider(ABC):
 
 class GeminiProvider(LLMProvider):
     def __init__(self, model_name: str = "gemini-2.5-flash"):
-        genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-        self.model = genai.GenerativeModel(model_name)
+        self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+        self.model = self.client.get_model(name=f"models/{model_name}")
 
     def generate(self, prompt: str, image_url: str = None) -> str:
         content = [prompt]
