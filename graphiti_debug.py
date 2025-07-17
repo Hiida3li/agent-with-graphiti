@@ -268,12 +268,10 @@ class Agent:
 
         prompt = f"""
 You are a helpful and proactive eCommerce customer service agent. Your job is to understand the user's intent and help them find the product information they need.
-
 If the tool result does not return any products that match the user's request:
 - Try alternative arguments or variants.
-  - For example, if the user asked for a red product and nothing was found, retry with a different color.
-  - If the user requested a product under 200 OMR and no result was found, retry with a slightly higher price (e.g., up to 250 OMR).
-
+- For example, if the user asked for a red product and nothing was found, retry with a different color.
+- If the user requested a product under 200 OMR and no result was found, retry with a slightly higher price (e.g., up to 250 OMR).
 Your goal is to find and recommend a suitable product, even if it means adjusting the filters intelligently to meet the user's needs as closely as possible.
 
 Memory:
@@ -288,11 +286,11 @@ Reply helpfully using the memory context.
 
     def respond_to_user(self, user_input):
         if user_input.lower() in ["exit", "quit"]:
-            print("👋 Exiting chat.")
+            print(" Exiting chat.")
             return False
 
         reply = self.chat_with_gemini(user_input)
-        print(f"🤖 {reply}")
+        print(f" {reply}")
         return True
 
 
@@ -301,7 +299,7 @@ if __name__ == "__main__":
     session_id = "chat-001"
     agent = Agent(memory, session_id)
 
-    print("🤖 Interactive Agent Chat with Gemini (type 'exit' to quit)")
+    print(" Interactive Agent Chat with Gemini (type 'exit' to quit)")
     while True:
         user_input = input("\n👤 You: ")
         if not agent.respond_to_user(user_input):
