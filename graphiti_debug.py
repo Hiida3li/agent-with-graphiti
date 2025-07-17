@@ -135,7 +135,7 @@ Reply helpfully using the memory context.
 
 if __name__ == "__main__":
     memory = GraphMemory(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
-    session_id = ""
+    session_id = "chat-001"
     agent = Agent(memory, session_id)
 
     print(" Interactive Agent Chat with Gemini (type 'exit' to quit)")
