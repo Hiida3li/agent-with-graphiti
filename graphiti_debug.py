@@ -62,9 +62,7 @@ class GraphMemory:
             return [record.data() for record in result]
 
 
-# ─────────────────────────────────────────────────────────────
-# Agent
-# ─────────────────────────────────────────────────────────────
+
 class Agent:
     def __init__(self, memory: GraphMemory, session_id: str):
         self.memory = memory
