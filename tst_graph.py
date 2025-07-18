@@ -203,8 +203,8 @@ Please provide a helpful response to the user based on this information.
 
 def main():
     agent = SimpleAgent()
-    print("🤖 Simple Agent Ready! (Type 'quit' to exit)")
-    print(f"📝 Session ID: {agent.session_id}")
+    print(" Simple Agent Ready! (Type 'quit' to exit)")
+    print(f" Session ID: {agent.session_id}")
 
     try:
         while True:
@@ -217,7 +217,7 @@ def main():
                 print(f"🤖 Agent: {response}")
 
     except KeyboardInterrupt:
-        print("\n👋 Goodbye!")
+        print("\n Goodbye!")
     finally:
         agent.memory.close()
 
