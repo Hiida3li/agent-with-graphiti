@@ -192,7 +192,7 @@ Please provide a helpful response to the user based on this information.
                     return final_response.text if final_response else "Sorry, couldn't generate response."
 
                 else:
-                    # Direct response
+
                     return response.text
 
             return "Sorry, I couldn't understand that."
