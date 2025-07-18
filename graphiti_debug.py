@@ -75,7 +75,6 @@ class Agent:
     def call_tool(self, tool_name, args):
         print(f" Calling tool: {tool_name} with args: {args}")
 
-        # Dummy tool behavior
         if tool_name == "search_products":
             color = args["filters"].get("color", "black")
             if color == "red":
