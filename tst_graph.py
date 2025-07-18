@@ -112,7 +112,7 @@ class GraphMemory:
                 result = session.run(query, session_id=session_id, limit=limit)
                 return [record.data() for record in result]
         except Exception as e:
-            print(f"⚠️  Memory retrieval failed: {e}")
+            print(f"️  Memory retrieval failed: {e}")
             return []
 
 
@@ -149,10 +149,10 @@ class SimpleAgent:
         memory_context = ""
         if history:
             memory_context = "\n\nRecent interactions:\n"
-            for h in reversed(history[-3:]):  # Last 3
+            for h in reversed(history[-3:]):
                 memory_context += f"- {h['tool_name']}: {h['args']}\n"
 
-        # Create prompt with memory
+
         prompt = f"""
 User query: {user_input}
 {memory_context}
@@ -167,19 +167,19 @@ Please help the user with their request. You can search products or FAQs if need
                 part = response.candidates[0].content.parts[0]
 
                 if part.function_call:
-                    # Handle function call
+
                     func_name = part.function_call.name
                     func_args = dict(part.function_call.args)
 
-                    print(f"🔧 Calling {func_name} with {func_args}")
+                    print(f" Calling {func_name} with {func_args}")
 
-                    # Mock the function call
+
                     result = self.mock_tool_call(func_name, func_args)
 
-                    # Log to memory
+
                     self.memory.log_tool_call(self.session_id, func_name, func_args, result)
 
-                    # Generate final response
+
                     final_prompt = f"""
 The user asked: {user_input}
 
@@ -208,7 +208,7 @@ def main():
 
     try:
         while True:
-            user_input = input("\n👤 You: ").strip()
+            user_input = input("\n You: ").strip()
             if user_input.lower() in ['quit', 'exit']:
                 break
 
