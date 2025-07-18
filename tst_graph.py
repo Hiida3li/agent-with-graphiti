@@ -9,10 +9,8 @@ from neo4j import GraphDatabase
 
 load_dotenv()
 
-# Initialize Gemini
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# Function declarations (same as your original)
 search_products_tool = genai.types.FunctionDeclaration(
     name="search_products",
     description="Searches the product catalog for items based on a text query and optional filters.",
@@ -51,9 +49,9 @@ class GraphMemory:
         try:
             self.driver = GraphDatabase.driver(uri, auth=(user, password))
             self.enabled = True
-            print("✅ Graph memory connected")
+            print(" Graph memory connected")
         except Exception as e:
-            print(f"⚠️  Graph memory disabled: {e}")
+            print(f"️  Graph memory disabled: {e}")
             self.driver = None
             self.enabled = False
 
@@ -73,7 +71,7 @@ class GraphMemory:
                                       session_id, call_id, timestamp,
                                       tool_name, args, result)
         except Exception as e:
-            print(f"⚠️  Memory logging failed: {e}")
+            print(f" Memory logging failed: {e}")
 
     @staticmethod
     def _create_tool_memory(tx, session_id, call_id, timestamp, tool_name, args, result):
