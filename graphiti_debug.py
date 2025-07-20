@@ -351,13 +351,12 @@ Please provide a natural language response to the user based on the tool result.
                     model="gemini-1.5-flash",
                     contents=follow_up_prompt
                 )
-                print(f"🤖 {final_response.text.strip()}")
+                print(f" {final_response.text.strip()}")
             else:
-                # Direct text response
-                print(f"🤖 {response.text.strip()}")
+                print(f" {response.text.strip()}")
 
         except Exception as e:
-            print(f"🤖 An error occurred: {e}")
+            print(f" An error occurred: {e}")
 
         return True
 
@@ -379,14 +378,13 @@ Please provide a natural language response to the user based on the tool result.
         else:
             result = {"status": "unknown tool"}
 
-        # Log the tool call to graph memory
         self.memory.log_tool_call(self.session_id, tool_name, args, result)
         return result
 
 
 if __name__ == "__main__":
     memory = GraphMemory(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
-    session_id = f"chat-{uuid.uuid4().hex[:8]}"  # Generate unique session ID
+    session_id = f"chat-{uuid.uuid4().hex[:8]}"
     agent = Agent(memory, session_id)
 
     print(" Interactive Agent Chat with Gemini (type 'exit' to quit)")
