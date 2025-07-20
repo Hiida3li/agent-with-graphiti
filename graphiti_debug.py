@@ -324,15 +324,15 @@ Provide a helpful response about the search results. If no products were found, 
 """
 
                 response = self.client.models.generate_content(
-                    model="gemini-1.5-flash",
+                    model="gemini-2.5-flash",
                     contents=response_prompt
                 )
-                print(f"🤖 {response.text.strip()}")
+                print(f" {response.text.strip()}")
 
             elif self._should_place_order(user_input):
                 # Extract order parameters
                 order_params = self._extract_order_params(user_input)
-                print(f"🤖 Placing order with: {order_params}")
+                print(f" Placing order with: {order_params}")
 
                 tool_result = self.call_tool("place_order", order_params)
 
