@@ -152,7 +152,7 @@ import uuid
 from datetime import datetime, timezone
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
 
 load_dotenv()
 NEO4J_URI = os.getenv("NEO4J_URI")
@@ -163,42 +163,50 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if GOOGLE_API_KEY is None:
     raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in your .env file.")
 
-# Configure the API
-genai.configure(api_key=GOOGLE_API_KEY)
+# Create the centralized client
+client = genai.Client(api_key=GOOGLE_API_KEY)
 
-# Define tools for Gemini's function-calling feature
-search_products_tool = genai.protos.FunctionDeclaration(
-    name="search_products",
-    description="Searches the product catalog for items based on a text query and optional filters.",
-    parameters=genai.protos.Schema(
-        type=genai.protos.Type.OBJECT,
-        properties={
-            "query": genai.protos.Schema(type=genai.protos.Type.STRING, description="A search query for products."),
-            "filters": genai.protos.Schema(
-                type=genai.protos.Type.OBJECT,
-                description="Optional filters like color.",
-                properties={
-                    "color": genai.protos.Schema(type=genai.protos.Type.STRING)
+# Define tools for function-calling feature
+search_products_tool = {
+    "name": "search_products",
+    "description": "Searches the product catalog for items based on a text query and optional filters.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "query": {
+                "type": "string",
+                "description": "A search query for products."
+            },
+            "filters": {
+                "type": "object",
+                "description": "Optional filters like color.",
+                "properties": {
+                    "color": {"type": "string"}
                 }
-            )
+            }
         },
-        required=["query"]
-    )
-)
+        "required": ["query"]
+    }
+}
 
-place_order_tool = genai.protos.FunctionDeclaration(
-    name="place_order",
-    description="Places an order for a given product ID.",
-    parameters=genai.protos.Schema(
-        type=genai.protos.Type.OBJECT,
-        properties={
-            "product_id": genai.protos.Schema(type=genai.protos.Type.STRING,
-                                             description="The unique ID of the product to order."),
-            "quantity": genai.protos.Schema(type=genai.protos.Type.INTEGER, description="The number of items to order.")
+place_order_tool = {
+    "name": "place_order",
+    "description": "Places an order for a given product ID.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "product_id": {
+                "type": "string",
+                "description": "The unique ID of the product to order."
+            },
+            "quantity": {
+                "type": "integer",
+                "description": "The number of items to order."
+            }
         },
-        required=["product_id", "quantity"]
-    )
-)
+        "required": ["product_id", "quantity"]
+    }
+}
 
 
 class GraphMemory:
@@ -218,7 +226,6 @@ class GraphMemory:
 
     @staticmethod
     def _create_tool_memory(tx, session_id, call_id, timestamp, tool_name, args, result):
-        # Simplified query: Store result directly on the ToolCall node
         query = """
         MERGE (s:Session {id: $session_id})
         CREATE (c:ToolCall {
@@ -235,7 +242,6 @@ class GraphMemory:
                args=json.dumps(args), result=json.dumps(result))
 
     def get_tool_history(self, session_id):
-        # Updated query to match the simplified schema
         query = """
         MATCH (s:Session {id: $session_id})-[:HAS_CALL]->(c:ToolCall)
         RETURN c.name AS tool_name, c.args AS args, c.result AS result, c.timestamp AS timestamp
@@ -243,7 +249,6 @@ class GraphMemory:
         """
         with self.driver.session() as session:
             result = session.run(query, session_id=session_id)
-            # Deserialize JSON strings back into Python objects
             return [
                 {
                     "tool_name": record["tool_name"],
@@ -253,62 +258,106 @@ class GraphMemory:
                 } for record in result
             ]
 
+    def get_conversation_context(self, session_id):
+        """Get formatted conversation context for the AI model"""
+        history = self.get_tool_history(session_id)
+        if not history:
+            return "No previous tool calls."
+
+        context_lines = []
+        for record in history:
+            context_lines.append(
+                f"{record['timestamp']} | {record['tool_name']} | "
+                f"args: {record['args']} → result: {record['result']}"
+            )
+        return "\n".join(context_lines)
+
 
 class Agent:
     def __init__(self, memory: GraphMemory, session_id: str):
         self.memory = memory
         self.session_id = session_id
-        # Encapsulate the model and tools within the agent
-        self.model = genai.GenerativeModel(
-            "gemini-1.5-flash",
-            tools=[search_products_tool, place_order_tool]
-        )
-        self.chat = self.model.start_chat(enable_automatic_function_calling=True)
+        self.client = client  # Use the global client
+        self.tools = [search_products_tool, place_order_tool]
 
-    def _convert_proto_to_dict(self, obj):
-        """Convert proto objects to regular Python objects for JSON serialization."""
-        if hasattr(obj, 'items'):  # MapComposite or dict-like
-            return {key: self._convert_proto_to_dict(value) for key, value in obj.items()}
-        elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes)):  # List-like
-            return [self._convert_proto_to_dict(item) for item in obj]
-        else:
-            return obj
+        # System prompt for the agent
+        self.system_prompt = """
+You are a helpful eCommerce customer service agent. Your job is to understand the user's intent and help them find the product information they need.
+
+If the tool result does not return any products that match the user's request:
+- Try alternative arguments or variants.
+- For example, if the user asked for a red product and nothing was found, retry with a different color.
+- If the user requested a product under 200 OMR and no result was found, retry with a slightly higher price (e.g., up to 250 OMR).
+
+Your goal is to find and recommend a suitable product, even if it means adjusting the filters intelligently to meet the user's needs as closely as possible.
+"""
 
     def respond_to_user(self, user_input: str) -> bool:
-        """Handles a user's message, decides on an action, and returns a response."""
+        """Handles a user's message and returns a response."""
         if user_input.lower() in ["exit", "quit"]:
             print("🤖 Exiting chat.")
             return False
 
         try:
-            # Send the user's message to Gemini
-            response = self.chat.send_message(user_input)
+            # Get conversation context from memory
+            context = self.memory.get_conversation_context(self.session_id)
 
-            # The model can return a function call or a direct text response
-            function_call = response.candidates[0].content.parts[0].function_call
-            if function_call:
-                # The model decided to call a tool
+            # Create the full prompt with context
+            full_prompt = f"""
+{self.system_prompt}
+
+Previous conversation context:
+{context}
+
+User: {user_input}
+
+Please respond helpfully, using available tools when needed.
+"""
+
+            # Generate response using the new client API
+            response = self.client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=full_prompt,
+                tools=self.tools,
+                tool_config={'function_calling_config': {'mode': 'AUTO'}}
+            )
+
+            # Check if the model wants to call a function
+            if response.candidates[0].content.parts[0].function_call:
+                function_call = response.candidates[0].content.parts[0].function_call
                 tool_name = function_call.name
-                args = self._convert_proto_to_dict({key: value for key, value in function_call.args.items()})
+                args = {key: value for key, value in function_call.args.items()}
 
                 print(f"🤖 Calling tool: {tool_name} with args: {args}")
                 tool_result = self.call_tool(tool_name, args)
 
-                # Send the tool's result back to the model to get a natural language response
-                response = self.chat.send_message(
-                    genai.protos.Part(
-                        function_response=genai.protos.FunctionResponse(
-                            name=tool_name,
-                            response=tool_result,
-                        )
-                    )
-                )
+                # Generate follow-up response with tool result
+                follow_up_prompt = f"""
+{self.system_prompt}
 
-            # Print the final text response from the model
-            print(f" {response.text.strip()}")
+Previous conversation context:
+{context}
+
+User: {user_input}
+
+Tool called: {tool_name}
+Tool args: {args}
+Tool result: {tool_result}
+
+Please provide a natural language response to the user based on the tool result.
+"""
+
+                final_response = self.client.models.generate_content(
+                    model="gemini-1.5-flash",
+                    contents=follow_up_prompt
+                )
+                print(f"🤖 {final_response.text.strip()}")
+            else:
+                # Direct text response
+                print(f"🤖 {response.text.strip()}")
 
         except Exception as e:
-            print(f" An error occurred: {e}")
+            print(f"🤖 An error occurred: {e}")
 
         return True
 
@@ -330,21 +379,25 @@ class Agent:
         else:
             result = {"status": "unknown tool"}
 
+        # Log the tool call to graph memory
         self.memory.log_tool_call(self.session_id, tool_name, args, result)
         return result
 
 
 if __name__ == "__main__":
     memory = GraphMemory(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
-    session_id = "chat-001"
+    session_id = f"chat-{uuid.uuid4().hex[:8]}"  # Generate unique session ID
     agent = Agent(memory, session_id)
 
     print(" Interactive Agent Chat with Gemini (type 'exit' to quit)")
+    print(f" Session ID: {session_id}")
+
     while True:
-        user_input = input("\n You: ")
+        user_input = input("\n👤 You: ")
         if not agent.respond_to_user(user_input):
             break
 
     memory.close()
+    print(" Chat session ended. Memory saved to graph database.")
 
 
