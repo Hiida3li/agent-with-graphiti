@@ -163,8 +163,10 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if GOOGLE_API_KEY is None:
     raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in your .env file.")
 
+# Create the centralized client
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
+# Define tools for function-calling feature
 search_products_tool = {
     "name": "search_products",
     "description": "Searches the product catalog for items based on a text query and optional filters.",
@@ -300,62 +302,112 @@ Your goal is to find and recommend a suitable product, even if it means adjustin
             # Get conversation context from memory
             context = self.memory.get_conversation_context(self.session_id)
 
-            # Create the full prompt with context
-            full_prompt = f"""
+            # First, determine if we need to call a tool based on user input
+            if self._should_search_products(user_input):
+                # Extract search parameters from user input
+                search_params = self._extract_search_params(user_input)
+                print(f"🤖 Searching for products with: {search_params}")
+
+                tool_result = self.call_tool("search_products", search_params)
+
+                # Generate response based on tool result
+                response_prompt = f"""
 {self.system_prompt}
 
 Previous conversation context:
 {context}
 
-User: {user_input}
+User request: {user_input}
+Search results: {tool_result}
 
-Please respond helpfully, using available tools when needed.
+Provide a helpful response about the search results. If no products were found, suggest alternatives.
 """
 
-            # Generate response using the new client API
-            response = self.client.models.generate_content(
-                model="gemini-1.5-flash",
-                contents=full_prompt,
-                tools=self.tools,
-                tool_config={'function_calling_config': {'mode': 'AUTO'}}
-            )
-
-            # Check if the model wants to call a function
-            if response.candidates[0].content.parts[0].function_call:
-                function_call = response.candidates[0].content.parts[0].function_call
-                tool_name = function_call.name
-                args = {key: value for key, value in function_call.args.items()}
-
-                print(f" Calling tool: {tool_name} with args: {args}")
-                tool_result = self.call_tool(tool_name, args)
-
-                follow_up_prompt = f"""
-{self.system_prompt}
-
-Previous conversation context:
-{context}
-
-User: {user_input}
-
-Tool called: {tool_name}
-Tool args: {args}
-Tool result: {tool_result}
-
-Please provide a natural language response to the user based on the tool result.
-"""
-
-                final_response = self.client.models.generate_content(
+                response = self.client.models.generate_content(
                     model="gemini-1.5-flash",
-                    contents=follow_up_prompt
+                    contents=response_prompt
                 )
-                print(f" {final_response.text.strip()}")
+                print(f"🤖 {response.text.strip()}")
+
+            elif self._should_place_order(user_input):
+                # Extract order parameters
+                order_params = self._extract_order_params(user_input)
+                print(f"🤖 Placing order with: {order_params}")
+
+                tool_result = self.call_tool("place_order", order_params)
+
+                response_prompt = f"""
+{self.system_prompt}
+
+Previous conversation context:
+{context}
+
+User request: {user_input}
+Order result: {tool_result}
+
+Provide a confirmation message about the order.
+"""
+
+                response = self.client.models.generate_content(
+                    model="gemini-1.5-flash",
+                    contents=response_prompt
+                )
+                print(f"🤖 {response.text.strip()}")
+
             else:
-                print(f" {response.text.strip()}")
+                # Direct conversation without tools
+                conversation_prompt = f"""
+{self.system_prompt}
+
+Previous conversation context:
+{context}
+
+User: {user_input}
+
+Respond helpfully. If the user is looking for products, let them know you can search for them.
+"""
+
+                response = self.client.models.generate_content(
+                    model="gemini-1.5-flash",
+                    contents=conversation_prompt
+                )
+                print(f"🤖 {response.text.strip()}")
 
         except Exception as e:
-            print(f" An error occurred: {e}")
+            print(f"🤖 An error occurred: {e}")
 
         return True
+
+    def _should_search_products(self, user_input: str) -> bool:
+        """Determine if user input indicates a product search."""
+        search_keywords = ["looking for", "search", "find", "phone", "product", "buy", "purchase", "show me"]
+        return any(keyword in user_input.lower() for keyword in search_keywords)
+
+    def _should_place_order(self, user_input: str) -> bool:
+        """Determine if user input indicates placing an order."""
+        order_keywords = ["order", "buy this", "purchase this", "place order", "checkout"]
+        return any(keyword in user_input.lower() for keyword in order_keywords)
+
+    def _extract_search_params(self, user_input: str) -> dict:
+        """Extract search parameters from user input."""
+        params = {"query": user_input}
+
+        # Extract color filter
+        colors = ["red", "blue", "green", "black", "white", "silver", "gold"]
+        for color in colors:
+            if color in user_input.lower():
+                params["filters"] = {"color": color}
+                break
+
+        return params
+
+    def _extract_order_params(self, user_input: str) -> dict:
+        """Extract order parameters from user input."""
+        # This is a simple implementation - in practice, you'd want more sophisticated parsing
+        return {
+            "product_id": "p123",  # Would extract from context/previous search
+            "quantity": 1
+        }
 
     def call_tool(self, tool_name: str, args: dict):
         """Executes a tool and logs the interaction to graph memory."""
@@ -375,17 +427,18 @@ Please provide a natural language response to the user based on the tool result.
         else:
             result = {"status": "unknown tool"}
 
+        # Log the tool call to graph memory
         self.memory.log_tool_call(self.session_id, tool_name, args, result)
         return result
 
 
 if __name__ == "__main__":
     memory = GraphMemory(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
-    session_id = f"chat-{uuid.uuid4().hex[:8]}"
+    session_id = f"chat-{uuid.uuid4().hex[:8]}"  # Generate unique session ID
     agent = Agent(memory, session_id)
 
-    print(" Interactive Agent Chat with Gemini (type 'exit' to quit)")
-    print(f" Session ID: {session_id}")
+    print("🤖 Interactive Agent Chat with Gemini (type 'exit' to quit)")
+    print(f"📝 Session ID: {session_id}")
 
     while True:
         user_input = input("\n👤 You: ")
@@ -393,6 +446,6 @@ if __name__ == "__main__":
             break
 
     memory.close()
-    print(" Chat session ended. Memory saved to graph database.")
+    print("🤖 Chat session ended. Memory saved to graph database.")
 
 
