@@ -160,7 +160,6 @@ NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# Configure the Gemini client
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Define tools for Gemini's function-calling feature
