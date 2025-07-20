@@ -293,10 +293,10 @@ class Agent:
                 )
 
             # Print the final text response from the model
-            print(f"🤖 {response.text.strip()}")
+            print(f" {response.text.strip()}")
 
         except Exception as e:
-            print(f"🚨 An error occurred: {e}")
+            print(f" An error occurred: {e}")
 
         return True
 
@@ -319,7 +319,6 @@ class Agent:
         else:
             result = {"status": "unknown tool"}
 
-        # Log the call and its result to memory
         self.memory.log_tool_call(self.session_id, tool_name, args, result)
         return result
 
@@ -329,9 +328,9 @@ if __name__ == "__main__":
     session_id = "chat-001"
     agent = Agent(memory, session_id)
 
-    print("🤖 Interactive Agent Chat with Gemini (type 'exit' to quit)")
+    print(" Interactive Agent Chat with Gemini (type 'exit' to quit)")
     while True:
-        user_input = input("\n👤 You: ")
+        user_input = input("\n You: ")
         if not agent.respond_to_user(user_input):
             break
 
