@@ -163,10 +163,8 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if GOOGLE_API_KEY is None:
     raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in your .env file.")
 
-# Create the centralized client
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
-# Define tools for function-calling feature
 search_products_tool = {
     "name": "search_products",
     "description": "Searches the product catalog for items based on a text query and optional filters.",
@@ -328,10 +326,9 @@ Please respond helpfully, using available tools when needed.
                 tool_name = function_call.name
                 args = {key: value for key, value in function_call.args.items()}
 
-                print(f"🤖 Calling tool: {tool_name} with args: {args}")
+                print(f" Calling tool: {tool_name} with args: {args}")
                 tool_result = self.call_tool(tool_name, args)
 
-                # Generate follow-up response with tool result
                 follow_up_prompt = f"""
 {self.system_prompt}
 
