@@ -149,7 +149,7 @@
 import os
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
 import google.generativeai as genai
@@ -158,23 +158,27 @@ load_dotenv()
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-genai.configure(api_key=GEMINI_API_KEY)
+if GOOGLE_API_KEY is None:
+    raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in your .env file.")
+
+# Configure the API
+genai.configure(api_key=GOOGLE_API_KEY)
 
 # Define tools for Gemini's function-calling feature
-search_products_tool = genai.types.FunctionDeclaration(
+search_products_tool = genai.protos.FunctionDeclaration(
     name="search_products",
     description="Searches the product catalog for items based on a text query and optional filters.",
-    parameters=genai.types.Schema(
-        type=genai.types.Type.OBJECT,
+    parameters=genai.protos.Schema(
+        type=genai.protos.Type.OBJECT,
         properties={
-            "query": genai.types.Schema(type=genai.types.Type.STRING, description="A search query for products."),
-            "filters": genai.types.Schema(
-                type=genai.types.Type.OBJECT,
+            "query": genai.protos.Schema(type=genai.protos.Type.STRING, description="A search query for products."),
+            "filters": genai.protos.Schema(
+                type=genai.protos.Type.OBJECT,
                 description="Optional filters like color.",
                 properties={
-                    "color": genai.types.Schema(type=genai.types.Type.STRING)
+                    "color": genai.protos.Schema(type=genai.protos.Type.STRING)
                 }
             )
         },
@@ -182,15 +186,15 @@ search_products_tool = genai.types.FunctionDeclaration(
     )
 )
 
-place_order_tool = genai.types.FunctionDeclaration(
+place_order_tool = genai.protos.FunctionDeclaration(
     name="place_order",
     description="Places an order for a given product ID.",
-    parameters=genai.types.Schema(
-        type=genai.types.Type.OBJECT,
+    parameters=genai.protos.Schema(
+        type=genai.protos.Type.OBJECT,
         properties={
-            "product_id": genai.types.Schema(type=genai.types.Type.STRING,
+            "product_id": genai.protos.Schema(type=genai.protos.Type.STRING,
                                              description="The unique ID of the product to order."),
-            "quantity": genai.types.Schema(type=genai.types.Type.INTEGER, description="The number of items to order.")
+            "quantity": genai.protos.Schema(type=genai.protos.Type.INTEGER, description="The number of items to order.")
         },
         required=["product_id", "quantity"]
     )
@@ -206,7 +210,7 @@ class GraphMemory:
 
     def log_tool_call(self, session_id, tool_name, args, result):
         call_id = str(uuid.uuid4())
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         with self.driver.session() as session:
             session.execute_write(self._create_tool_memory,
                                   session_id, call_id, timestamp,
@@ -261,6 +265,15 @@ class Agent:
         )
         self.chat = self.model.start_chat(enable_automatic_function_calling=True)
 
+    def _convert_proto_to_dict(self, obj):
+        """Convert proto objects to regular Python objects for JSON serialization."""
+        if hasattr(obj, 'items'):  # MapComposite or dict-like
+            return {key: self._convert_proto_to_dict(value) for key, value in obj.items()}
+        elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes)):  # List-like
+            return [self._convert_proto_to_dict(item) for item in obj]
+        else:
+            return obj
+
     def respond_to_user(self, user_input: str) -> bool:
         """Handles a user's message, decides on an action, and returns a response."""
         if user_input.lower() in ["exit", "quit"]:
@@ -276,15 +289,15 @@ class Agent:
             if function_call:
                 # The model decided to call a tool
                 tool_name = function_call.name
-                args = {key: value for key, value in function_call.args.items()}
+                args = self._convert_proto_to_dict({key: value for key, value in function_call.args.items()})
 
                 print(f"🤖 Calling tool: {tool_name} with args: {args}")
                 tool_result = self.call_tool(tool_name, args)
 
                 # Send the tool's result back to the model to get a natural language response
                 response = self.chat.send_message(
-                    genai.types.Part(
-                        function_response=genai.types.FunctionResponse(
+                    genai.protos.Part(
+                        function_response=genai.protos.FunctionResponse(
                             name=tool_name,
                             response=tool_result,
                         )
@@ -301,7 +314,6 @@ class Agent:
 
     def call_tool(self, tool_name: str, args: dict):
         """Executes a tool and logs the interaction to graph memory."""
-        # (Your existing tool logic remains here)
         if tool_name == "search_products":
             color = args.get("filters", {}).get("color", "black")
             if color == "red":
@@ -334,3 +346,5 @@ if __name__ == "__main__":
             break
 
     memory.close()
+
+
