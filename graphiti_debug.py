@@ -437,8 +437,8 @@ if __name__ == "__main__":
     session_id = f"chat-{uuid.uuid4().hex[:8]}"  # Generate unique session ID
     agent = Agent(memory, session_id)
 
-    print("🤖 Interactive Agent Chat with Gemini (type 'exit' to quit)")
-    print(f"📝 Session ID: {session_id}")
+    print(" Interactive Agent Chat with Gemini (type 'exit' to quit)")
+    print(f" Session ID: {session_id}")
 
     while True:
         user_input = input("\n👤 You: ")
@@ -446,6 +446,6 @@ if __name__ == "__main__":
             break
 
     memory.close()
-    print("🤖 Chat session ended. Memory saved to graph database.")
+    print(" Chat session ended. Memory saved to graph database.")
 
 
