@@ -5,6 +5,7 @@ import uuid
 from typing import Dict, Any, List
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 from abc import ABC, abstractmethod
 import time
 from quixstreams import Application
