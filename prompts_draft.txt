@@ -1,0 +1,6 @@
+description="Use this tool to send responses to the user in two phases.
+PHASE 1 (Direct Response): Send an immediate greeting, acknowledgment message telling the user their request is being processed (e.g., 'I'll help you find that product, let me search for you...').
+PHASE 2 (Final Result): After executing other tools, use this tool again to deliver the comprehensive results and findings to the user.
+Make it a human-like interaction where users get immediate response followed by detailed answers."
+
+
