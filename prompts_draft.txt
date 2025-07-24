@@ -4,3 +4,8 @@ PHASE 2 (Final Result): After executing other tools, use this tool again to deli
 Make it a human-like interaction where users get immediate response followed by detailed answers."
 
 
+description="Use this tool to respond to the user in two distinct phases:
+PHASE 1 (Immediate Acknowledgment): Send a friendly, human-like message to greet the user and acknowledge their request. Let them know their request is being processed (e.g., "Got it! I’ll look that up for you now…").
+PHASE 2 (Follow-up with Results): After executing the appropriate tools, use this tool again to deliver the results back to the user in a helpful and natural way.
+This tool is used twice in the flow, to provide immediate acknowledgment and improve responsiveness, and to share final results once retrieved.
+Ensure the responses feel conversational, human, and context-aware."
