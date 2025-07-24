@@ -11,4 +11,5 @@ This tool is used twice in the flow, to provide immediate acknowledgment and imp
 Ensure the responses feel conversational, human, and context-aware."
 
 
-description="Respond to users in two phases: PHASE 1 (Immediate): Send a friendly acknowledgment that their request is being processed (e.g., 'I'll search for that now...'). PHASE 2 (Results): After running search tools, deliver the findings in a conversational way. Use this tool twice per request to provide immediate feedback followed by complete results."
+description="Respond to users in two phases: PHASE 1 (Immediate): Send a friendly acknowledgment that their request is being processed (e.g., 'I'll search for that now...').
+PHASE 2 (Results): After running search tools, deliver the findings in a conversational way. Use this tool twice per request to provide immediate feedback followed by complete results.",
